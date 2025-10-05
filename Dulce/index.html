@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tablero - Nueva pestaña</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .about-section { text-align: center; padding: 20px; }
+    .about-photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--primary-color, #fff);
+      margin-bottom: 15px;
+    }
+    .social-links { margin-top: 20px; display: flex; justify-content: center; gap: 16px; }
+    .social-links a { color: var(--muted); text-decoration: none; transition: transform .2s; display: inline-block; }
+    .social-links a:hover { transform: scale(1.2); color: var(--accent); }
+    .social-links svg {
+      width: 28px;
+      height: 28px;
+    }
+  </style>
+</head>
+<body data-theme="paisaje">
+  <div class="wrap">
+    <header class="header">
+      <div class="brand-container">
+        <button id="backBtn" class="back-btn" hidden>‹</button>
+        <div id="greeting" class="brand"></div>
+      </div>
+      <div class="controls">
+        <button id="openSettings" title="Configuración">
+          <img src="images/tuerca.svg" alt="Configuración" />
+        </button>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="live-info">
+        <div class="time-info">
+          <div id="clock" class="clock"></div>
+          <div id="date" class="date"></div>
+        </div>
+        <div id="weather" class="weather-widget">
+          <!-- Weather content will be injected by JS -->
+        </div>
+      </section>
+
+      <section class="search-section">
+        <div class="search-card">
+          <select id="engineSelect" aria-label="Motor de búsqueda">
+            <option value="google">Google</option>
+            <option value="duck">DuckDuckGo</option>
+            <option value="bing">Bing</option>
+            <option value="youtube">YouTube</option>
+            <option value="wiki">Wikipedia</option>
+            <option value="ecosia">Ecosia</option>
+          </select>
+          <input id="searchInput" placeholder="Buscar en la web..." />
+          <button id="searchGo">
+            <img id="searchEngineIcon" src="" alt="Icono del buscador" hidden>
+            Buscar
+          </button>
+        </div>
+      </section>
+
+      <section class="tiles-section">
+        <div id="tiles" class="tiles"></div>
+      </section>
+    </main>
+
+    <footer class="footer">Diseño: Ultimate • Personalizable</footer>
+  </div>
+
+  <!-- Overlay for settings panel -->
+  <div id="overlay" class="overlay" aria-hidden="true"></div>
+
+  <!-- Settings panel -->
+  <aside id="settings" class="settings" aria-hidden="true" role="dialog" aria-labelledby="settings-title">
+    <header class="settings-header">
+      <h3 id="settings-title">Configuración</h3>
+      <button id="closeSettings" aria-label="Cerrar configuración">
+        <img src="images/cerrar.svg" alt="Cerrar" />
+      </button>
+    </header>
+    <div class="settings-tabs">
+      <button class="tab-btn active" data-tab="apariencia">Apariencia</button>
+      <button class="tab-btn" data-tab="accesos">Accesos</button>
+      <button class="tab-btn" data-tab="datos">Datos</button>
+      <button class="tab-btn" data-tab="acerca-de">Acerca de</button>
+    </div>
+    <div class="settings-body">
+      <!-- Tab: Apariencia -->
+      <div class="tab-pane active" id="tab-apariencia">
+        <div class="field">
+          <label for="userName">Tu Nombre</label>
+          <input id="userName" placeholder="¿Cómo te llamas?" />
+        </div>
+        <div class="field">
+          <label>Tema</label>
+          <div class="theme-list">
+            <button class="theme btn" data-theme="paisaje">🌅 Paisaje</button>
+            <button class="theme btn" data-theme="cosmico">🌌 Cósmico</button>
+            <button class="theme btn" data-theme="neon">🎨 Abstracto</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Degradados</label>
+          <div id="gradient-list" class="gradient-list">
+            <!-- Los degradados se cargarán aquí desde JS -->
+          </div>
+        </div>
+        <div class="field">
+          <label for="bgUrl">Fondo Personalizado</label>
+          <input id="bgUrl" placeholder="Pega una URL de imagen para verla al instante" />
+          <div class="or">o</div>
+          <label for="bgFile" class="btn file-label">Subir imagen</label>
+          <input id="bgFile" type="file" accept="image/*" hidden/>
+        </div>
+        <div class="field">
+          <label for="panelOpacity">Opacidad de paneles <span id="opacityValue">5%</span></label>
+          <input type="range" id="panelOpacity" min="0" max="0.5" step="0.01" value="0.05">
+        </div>
+        <div class="field">
+          <label for="panelBlur">Desenfoque de paneles <span id="blurValue">6px</span></label>
+          <input type="range" id="panelBlur" min="0" max="20" step="1" value="6">
+        </div>
+        <div class="field">
+            <label for="weatherCity">Ubicación del Clima</label>
+            <input id="weatherCity" placeholder="Dejar en blanco para autodetectar" />
+        </div>
+        <div class="field">
+          <label>Motor predeterminado</label>
+          <select id="defaultEngine">
+            <option value="google">Google</option>
+            <option value="duck">DuckDuckGo</option>
+            <option value="bing">Bing</option>
+            <option value="youtube">YouTube</option>
+            <option value="wiki">Wikipedia</option>
+            <option value="ecosia">Ecosia</option>
+          </select>
+        </div>
+      </div>
+      <!-- Tab: Accesos -->
+      <div class="tab-pane" id="tab-accesos">
+        <div class="field">
+          <label>Gestionar Accesos</label>
+          <div id="editor" class="editor"></div>
+          <button id="addTile" class="btn primary full-width">+ Añadir acceso</button>
+        </div>
+      </div>
+      <!-- Tab: Datos -->
+      <div class="tab-pane" id="tab-datos">
+        <div class="field">
+          <label>Importar / Exportar</label>
+          <div class="button-group">
+            <button id="exportBtn" class="btn">Exportar</button>
+            <button id="importBtn" class="btn">Importar</button>
+          </div>
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
+        </div>
+      </div>
+      <!-- Tab: Acerca de -->
+      <div class="tab-pane" id="tab-acerca-de">
+        <div class="about-section">
+          <img src="images/Dulce-flamenco.png" alt="Foto del autor" class="about-photo">
+          <h4>Héctor Daniel Ayarachi Fuentes</h4>
+          <p>Desarrollador de esta extensión.</p>
+          <p>¡Gracias por usar el Tablero de Accesos!</p>
+          <div class="social-links">
+            <a href="https://github.com/HectorDanielAyarachiFuentes" target="_blank" rel="noopener noreferrer" title="GitHub">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Edit modal -->
+  <div id="modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <button id="closeModal" class="modal-close" aria-label="Cerrar modal">✕</button>
+      <h4 id="modalTitle">Editar Acceso</h4>
+      <div class="modal-preview">
+        <img id="modalPreviewImg" src="" alt="Vista previa del ícono">
+        <div class="preview-actions">
+          <button id="modalResetIcon" title="Restablecer ícono">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          </button>
+          <button id="modalEditIcon" title="Cambiar imagen">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          </button>
+        </div>
+        <input type="file" id="modalIconFile" accept="image/*" hidden>
+      </div>
+      <label>Nombre</label>
+      <input id="modalName" />
+      <label id="modalUrlLabel">Dirección</label>
+      <input id="modalUrl" />
+      <div class="modal-actions">
+        <button id="modalCancel" class="btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          Cancelar
+        </button>
+        <button id="modalSave" class="btn primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Aceptar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menú contextual para los accesos -->
+  <div id="contextMenu" class="context-menu" hidden>
+    <ul>
+      <li data-action="favorite">Marcar como favorito</li>
+      <li data-action="open-tab">Abrir en pestaña nueva</li>
+      <li data-action="open-window">Abrir en ventana nueva</li>
+      <li data-action="open-private">Abrir en ventana privada nueva</li>
+      <hr>
+      <li data-action="edit">Editar</li>
+      <li data-action="delete">Enviar a Papelera</li>
+    </ul>
+  </div>
+
+  <template id="tileTpl">
+    <a class="tile" draggable="true" target="_blank" rel="noopener noreferrer">
+      <img class="thumb" width="56" height="56" alt="">
+      <div class="info">
+        <div class="title"></div>
+        <div class="url"></div>
+      </div>
+      <div class="actions">
+        <button class="more-btn" title="Más opciones">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+        </button>
+      </div>
+    </a>
+  </template>
+
+  <script src="utils.js"></script>
+  <script src="carpetas.js"></script>
+  <script src="tiempo.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

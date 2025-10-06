@@ -16,19 +16,19 @@ La pantalla principal te da la bienvenida y te permite acceder a todas las funci
 
 Agrega, modifica y elimina tus enlaces y aplicaciones fácilmente. Cada entrada puede tener un nombre, una ruta (URL o ruta de archivo) y un ícono personalizado para una mejor identificación visual.
 
-!Gestión de enlaces
+![Gestión de enlaces](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/Accesosparagestionarlinks.png?raw=true)
 
 ### 🎨 Personalización de la Apariencia
 
 Adapta la apariencia de la aplicación a tu gusto. Puedes cambiar el tema (claro/oscuro) y los colores de la interfaz para que se ajusten a tus preferencias.
 
-!Modificando la apariencia
+![Modificando la apariencia](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/Modificandoapariencia.png?raw=true)
 
 ### 🌐 Selección de Navegador
 
 Elige con qué navegador web deseas abrir tus enlaces. La aplicación te permite seleccionar tu navegador predeterminado o elegir uno diferente de forma rápida.
 
-!Selección de navegador
+![Selección de navegador](https://github.com/HectorDanielAyarachiFuentes/tablero-menu-ayarachi/blob/main/img-md/Elegirnavegadoresalternodeformarapida.png?raw=true)
 
 ### 🔄 Importar y Exportar Datos
 

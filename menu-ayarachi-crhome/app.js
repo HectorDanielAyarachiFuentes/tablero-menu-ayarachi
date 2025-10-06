@@ -3,7 +3,11 @@ const tpl = document.getElementById('tileTpl');
 const settings = $('#settings');
 const openSettings = $('#openSettings');
 const closeSettings = $('#closeSettings');
-const engineSelect = $('#engineSelect');
+// Custom select elements
+const engineSelectWrapper = $('.custom-select-wrapper');
+const engineSelectTrigger = $('#engineSelectTrigger');
+const engineSelectList = $('#engineSelectList');
+const selectedEngineIcon = $('#selectedEngineIcon');
 const searchInput = $('#searchInput');
 const searchGo = $('#searchGo');
 const searchEngineIcon = $('#searchEngineIcon');
@@ -13,7 +17,6 @@ const userNameInput = $('#userName');
 const clockEl = $('#clock');
 const dateEl = $('#date');
 const weatherCityInput = $('#weatherCity');
-const defaultEngine = $('#defaultEngine');
 const themeButtons = Array.from(document.querySelectorAll('.theme'));
 const gradientListEl = $('#gradient-list');
 const bgFile = $('#bgFile');
@@ -44,6 +47,7 @@ let tiles = [];
 let editing = null;
 let currentTheme = 'paisaje';
 let currentBackgroundValue = ''; // To store current background for hover previews
+let isOpeningFavorite = false; // Flag to prevent re-triggering search
 
 async function init(){
   const stored = await storageGet(['tiles','engine','theme','bgData','bgUrl', 'userName', 'weatherCity', 'gradient', 'panelOpacity', 'panelBlur']);
@@ -65,12 +69,11 @@ async function init(){
     return t;
   });
   const engine = stored.engine || 'google';
-  engineSelect.value = engine;
-  $('#defaultEngine').value = engine;
   userNameInput.value = stored.userName || '';
   weatherCityInput.value = stored.weatherCity || '';
   renderGreeting(stored.userName);
   renderFavoritesInSelect();
+
 
   // Background initialization logic
   if (stored.bgData) {
@@ -78,30 +81,29 @@ async function init(){
   } else if (stored.bgUrl) {
     currentBackgroundValue = `url('${stored.bgUrl}')`;
   } else if (stored.gradient) {
+    updateActiveGradientButton(stored.gradient);
     currentBackgroundValue = stored.gradient;
   } else {
-    // For themes, we don't set a style directly, but use the data-theme attribute
-    // We'll set currentBackgroundValue when a theme is clicked or hovered
     currentTheme = stored.theme || 'paisaje';
-    document.body.setAttribute('data-theme', currentTheme);
+    // El tema ya fue aplicado por bg-loader.js, solo actualizamos el estado interno y el botón.
+    // document.body.setAttribute('data-theme', currentTheme);
     updateActiveThemeButton(currentTheme);
   }
 
-  // Panel style initialization
-  const panelOpacity = stored.panelOpacity ?? 0.05;
-  document.body.style.backgroundImage = currentBackgroundValue;
-  const panelBlur = stored.panelBlur ?? 6;
+  const panelOpacity = stored.panelOpacity ?? 0.05; // Panel style initialization
+  const panelBlur = stored.panelBlur ?? 6; // Panel style initialization
   document.documentElement.style.setProperty('--panel-opacity', panelOpacity);
   document.documentElement.style.setProperty('--panel-blur', `${panelBlur}px`);
   panelOpacitySlider.value = panelOpacity;
   panelBlurSlider.value = panelBlur;
   updateSliderValueSpans();
 
-  updateSearchIcon(engine);
+  await storageSet({ engine }); // Ensure engine is saved before rendering favorites
   loadGradients(stored.gradient);
   updateClock();
   setInterval(updateClock, 1000); // Clock updates every second
   WeatherManager.init();
+  setInterval(WeatherManager.init, 1800000); // Actualiza el clima cada 30 minutos
   renderTiles();
   renderEditor();
 }
@@ -138,6 +140,7 @@ function renderTiles(){
   const currentTiles = FolderManager.getTilesForCurrentView(tiles);
   currentTiles.forEach((t, i) => {
     const node = FolderManager.renderTile(t, i, tpl);
+    node.style.animationDelay = `${i * 50}ms`; // Staggered animation
     tilesEl.appendChild(node);
   });
 
@@ -180,6 +183,56 @@ tilesEl.addEventListener('click', e => {
     }
 });
 
+// Drag and drop for tiles
+let dragTileSrcEl = null;
+
+tilesEl.addEventListener('dragstart', e => {
+    const tile = e.target.closest('.tile:not(.tile-add)');
+    if (tile) {
+        dragTileSrcEl = tile;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', tile.dataset.idx); // Pass index
+        // Use a timeout to allow the browser to create the drag image before applying the class
+        setTimeout(() => {
+            tile.classList.add('dragging');
+        }, 0);
+    }
+});
+
+tilesEl.addEventListener('dragover', e => {
+    e.preventDefault(); // Necessary to allow dropping
+    const targetTile = e.target.closest('.tile:not(.tile-add)');
+    if (targetTile && targetTile !== dragTileSrcEl) {
+        targetTile.classList.add('drag-over');
+    }
+});
+
+tilesEl.addEventListener('dragleave', e => {
+    const targetTile = e.target.closest('.tile:not(.tile-add)');
+    if (targetTile) {
+        targetTile.classList.remove('drag-over');
+    }
+});
+
+tilesEl.addEventListener('drop', e => {
+    e.preventDefault();
+    const dropTarget = e.target.closest('.tile:not(.tile-add)');
+    if (dragTileSrcEl && dropTarget && dragTileSrcEl !== dropTarget) {
+        const fromIndex = Number(dragTileSrcEl.dataset.idx);
+        const toIndex = Number(dropTarget.dataset.idx);
+
+        const currentTiles = FolderManager.getTilesForCurrentView(tiles);
+        const item = currentTiles.splice(fromIndex, 1)[0];
+        currentTiles.splice(toIndex, 0, item);
+        saveAndRender();
+    }
+});
+
+tilesEl.addEventListener('dragend', () => {
+    $$('.tile').forEach(t => t.classList.remove('dragging', 'drag-over'));
+    dragTileSrcEl = null;
+});
+
 function showContextMenu(button, index) {
     activeMenuIndex = index;
     const tileData = FolderManager.getTilesForCurrentView(tiles)[index];
@@ -204,11 +257,16 @@ function showContextMenu(button, index) {
 }
 
 // Hide context menu on click anywhere
-document.addEventListener('click', () => {
-    if (!contextMenu.hidden) { contextMenu.hidden = true; }
+document.addEventListener('click', (e) => {
+    // Hide if the click is outside the context menu
+    if (!contextMenu.hidden && !e.target.closest('.context-menu')) {
+        resetDeleteConfirmation();
+        contextMenu.hidden = true;
+    }
 });
 
 contextMenu.addEventListener('click', e => {
+    e.stopPropagation(); // Prevent the document click listener from firing
     const action = e.target.dataset.action;
     if (!action || activeMenuIndex === null) return;
 
@@ -222,7 +280,7 @@ contextMenu.addEventListener('click', e => {
             saveAndRender();
             break;
         case 'open-tab':
-            window.open(tile.url, '_blank');
+            window.open(tile.url);
             break;
         case 'open-window':
             window.open(tile.url, '_blank', 'noopener,noreferrer');
@@ -236,11 +294,27 @@ contextMenu.addEventListener('click', e => {
             openModal(activeMenuIndex);
             break;
         case 'delete':
-            currentTiles.splice(activeMenuIndex, 1);
-            saveAndRender();
+            const deleteOption = e.target;
+            if (deleteOption.classList.contains('confirm-delete')) {
+                // Second click: confirm and delete
+                currentTiles.splice(activeMenuIndex, 1);
+                saveAndRender();
+                contextMenu.hidden = true; // Hide menu after successful deletion
+                resetDeleteConfirmation();
+            } else {
+                // First click: start confirmation
+                resetDeleteConfirmation(); // Reset any other pending deletions
+                deleteOption.classList.add('confirm-delete');
+                deleteOption.textContent = '¿Confirmar eliminación?';
+                const tileNode = tilesEl.querySelector(`.tile[data-idx="${activeMenuIndex}"]`);
+                if (tileNode) {
+                    tileNode.classList.add('pending-delete');
+                }
+            }
             break;
     }
-    contextMenu.hidden = true; // Hide after action
+    // Don't hide the menu on the first delete click
+    if (action !== 'delete') contextMenu.hidden = true;
 });
 
 
@@ -377,10 +451,28 @@ function handleModalSave() {
     closeModal();
 }
 
+function resetDeleteConfirmation() {
+    const confirmItem = contextMenu.querySelector('.confirm-delete');
+    if (confirmItem) {
+        confirmItem.classList.remove('confirm-delete');
+        confirmItem.textContent = 'Enviar a la papelera';
+    }
+    const pendingTile = tilesEl.querySelector('.pending-delete');
+    if (pendingTile) {
+        pendingTile.classList.remove('pending-delete');
+    }
+}
+
 function openEdit(i) { openModal(i); }
 
 // --- Search ---
-function performSearch() { const q = searchInput.value.trim(); if (q) window.open(buildSearchUrl(engineSelect.value, q), '_blank'); }
+async function performSearch() {
+    const q = searchInput.value.trim();
+    if (q) {
+        const { engine } = await storageGet(['engine']);
+        window.open(buildSearchUrl(engine || 'google', q));
+    }
+}
 
 function buildSearchUrl(engine, q){
   const enc = encodeURIComponent(q);
@@ -406,11 +498,8 @@ function updateSearchIcon(engine) {
         case 'ecosia': domain = 'ecosia.org'; break;
     }
     if (domain) {
-        searchEngineIcon.src = `https://www.google.com/s2/favicons?sz=32&domain=${domain}`;
-        searchEngineIcon.hidden = false;
-    } else {
-        searchEngineIcon.hidden = true;
-    }
+        selectedEngineIcon.src = `https://www.google.com/s2/favicons?sz=32&domain=${domain}`; // This one is for the dropdown trigger
+    } 
 }
 // --- Settings & Data ---
 
@@ -428,39 +517,50 @@ function saveAndRender() {
     }
 }
 
-function getSelectedEngine() {
-    const firstOptgroup = engineSelect.querySelector('optgroup');
-    return firstOptgroup ? engineSelect.value : (engineSelect.options[engineSelect.selectedIndex]?.value || 'google');
-}
+async function renderFavoritesInSelect() {
+    engineSelectList.innerHTML = ''; // Clear all options
+    const stored = await storageGet(['engine']);
+    const currentEngine = stored.engine || 'google';
 
-function renderFavoritesInSelect() {
-    // Clear only favorites
-    const favGroup = engineSelect.querySelector('optgroup[label="Favoritos"]');
-    if (favGroup) {
-        favGroup.remove();
-    }
+    const engines = [
+        { value: 'google', text: 'Google' },
+        { value: 'duck', text: 'DuckDuckGo' },
+        { value: 'bing', text: 'Bing' },
+        { value: 'youtube', text: 'YouTube' },
+        { value: 'wiki', text: 'Wikipedia' },
+        { value: 'ecosia', text: 'Ecosia' },
+    ];
+
+    const createOption = (item) => {
+        const option = document.createElement('div');
+        option.className = 'option';
+        option.dataset.value = item.value;
+        if (item.url) option.dataset.url = item.url;
+
+        const domain = item.url ? new URL(item.url).hostname : `${item.value}.com`;
+        option.innerHTML = `<img src="https://www.google.com/s2/favicons?sz=32&domain=${domain}" alt=""><span>${item.text}</span>`;
+        engineSelectList.appendChild(option);
+    };
+
+    engines.forEach(createOption);
 
     const favoriteTiles = tiles.filter(t => t.favorite);
-
     if (favoriteTiles.length > 0) {
-        const optgroup = document.createElement('optgroup');
-        optgroup.label = 'Favoritos';
-
-        favoriteTiles.forEach(tile => {
-            const option = document.createElement('option');
-            option.value = tile.url;
-            option.textContent = `⭐ ${tile.name}`;
-            optgroup.appendChild(option);
+        favoriteTiles.forEach((tile) => {
+            createOption({
+                value: `favorite-${tile.url}`, // Unique value for favorites
+                text: `⭐ ${tile.name}`,
+                url: tile.url
+            });
         });
-
-        engineSelect.appendChild(optgroup);
     }
-    // Restore selected engine from the initial load or last selection
-    storageGet(['engine']).then(stored => {
-        const savedEngine = stored.engine || 'google';
-        engineSelect.value = savedEngine;
-        updateSearchIcon(savedEngine);
-    });
+
+    // Set current engine display
+    const currentEngineData = engines.find(e => e.value === currentEngine);
+    if (currentEngineData) {
+        $('#selectedEngineName').textContent = currentEngineData.text;
+    }
+    updateSearchIcon(currentEngine);
 }
 
 function handleThemeChange(e) {
@@ -571,7 +671,7 @@ function handleBackgroundLeave() {
 }
 
 function handleExport() {
-  const data = { tiles, theme: currentTheme, engine: engineSelect.value };
+  const data = { tiles, theme: currentTheme, engine: $('#defaultEngine').value };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tablero-export.json'; a.click();
 }
@@ -589,7 +689,7 @@ function handleImport(e) {
                 document.body.setAttribute('data-theme', currentTheme);
             }
             if (data.engine) {
-                engineSelect.value = data.engine;
+                storageSet({ engine: data.engine });
                 $('#defaultEngine').value = data.engine;
             }
             saveAndRender();
@@ -619,6 +719,12 @@ closeSettings.addEventListener('click', () => toggleSettings(false));
 document.addEventListener('click', (e) => {
     if (e.target === overlay) {
         toggleSettings(false);
+    }
+    // Close custom select when clicking outside
+    if (!engineSelectWrapper.contains(e.target)) {
+        engineSelectList.hidden = true;
+        engineSelectTrigger.setAttribute('aria-expanded', 'false');
+        engineSelectWrapper.classList.remove('open');
     }
 });
 
@@ -697,16 +803,33 @@ document.addEventListener('keydown', (e) => {
 
 searchGo.addEventListener('click', performSearch);
 searchInput.addEventListener('keypress', e => e.key === 'Enter' && performSearch());
-engineSelect.addEventListener('change', (e) => {
-    const selectedValue = e.target.value;
-    if (selectedValue.startsWith('http')) {
-        window.open(selectedValue, '_blank');
-        // Re-render to restore previous selection
-        renderFavoritesInSelect();
+
+engineSelectTrigger.addEventListener('click', () => {
+    const isHidden = engineSelectList.hidden;
+    engineSelectList.hidden = !isHidden;
+    engineSelectTrigger.setAttribute('aria-expanded', String(isHidden));
+    engineSelectWrapper.classList.toggle('open', isHidden);
+});
+
+engineSelectList.addEventListener('click', async (e) => {
+    const option = e.target.closest('.option');
+    if (!option) return;
+
+    const selectedValue = option.dataset.value;
+
+    if (selectedValue.startsWith('favorite-')) {
+        const urlToOpen = option.dataset.url;
+        if (urlToOpen) {
+            window.open(urlToOpen);
+        }
     } else {
+        await storageSet({ engine: selectedValue });
         updateSearchIcon(selectedValue);
-        storageSet({ engine: selectedValue }); // Persist engine selection
+        $('#selectedEngineName').textContent = option.querySelector('span').textContent;
     }
+    engineSelectList.hidden = true;
+    engineSelectTrigger.setAttribute('aria-expanded', 'false');
+    engineSelectWrapper.classList.remove('open');
 });
 
 themeButtons.forEach(b => {

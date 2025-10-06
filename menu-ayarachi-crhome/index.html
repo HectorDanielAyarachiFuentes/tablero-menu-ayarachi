@@ -7,6 +7,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
+    body.loading {
+      opacity: 0;
+      transition: opacity 0.3s ease-in;
+    }
+  </style>
+  <style>
     .about-section { text-align: center; padding: 20px; }
     .about-photo {
       width: 120px;
@@ -23,9 +29,43 @@
       width: 28px;
       height: 28px;
     }
+    .search-section {
+      position: relative;
+      z-index: 10;
+    }
+    /* Estilos para el nuevo selector de buscador */
+    .search-card { position: relative; }
+    .custom-select-wrapper { display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; border-right: 1px solid rgba(255,255,255,0.15); }
+    .custom-select-trigger { cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: 10px 0 0 10px; transition: background-color .2s; height: 100%; }
+    .custom-select-trigger:hover { background-color: rgba(255,255,255,0.2); }
+    .custom-select-trigger img { width: 20px; height: 20px; }
+    .custom-select-trigger .arrow { width: 16px; height: 16px; stroke: currentColor; transition: transform .2s; }
+    .custom-select-wrapper.open .arrow { transform: rotate(180deg); }
+    .custom-select-options {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      background-color: var(--panel-bg);
+      border-radius: 8px;
+      padding: 8px;
+      z-index: 100;
+      width: 200px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .custom-select-options .option { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 6px; cursor: pointer; }
+    .custom-select-options .option:hover { background-color: rgba(255,255,255,0.1); }
+    /* Fix para el apilamiento (z-index) en la barra de búsqueda */
+    .search-input-group { 
+      flex: 1;
+      display: flex;
+      position: relative; /* Crea un contexto de apilamiento inferior */
+      z-index: 1; 
+    }
   </style>
 </head>
-<body data-theme="paisaje">
+<body class="loading">
+  <script src="bg-loader.js"></script>
   <div class="wrap">
     <header class="header">
       <div class="brand-container">
@@ -52,19 +92,22 @@
 
       <section class="search-section">
         <div class="search-card">
-          <select id="engineSelect" aria-label="Motor de búsqueda">
-            <option value="google">Google</option>
-            <option value="duck">DuckDuckGo</option>
-            <option value="bing">Bing</option>
-            <option value="youtube">YouTube</option>
-            <option value="wiki">Wikipedia</option>
-            <option value="ecosia">Ecosia</option>
-          </select>
-          <input id="searchInput" placeholder="Buscar en la web..." />
-          <button id="searchGo">
-            <img id="searchEngineIcon" src="" alt="Icono del buscador" hidden>
-            Buscar
-          </button>
+          <div class="custom-select-wrapper">
+            <div id="engineSelectTrigger" class="custom-select-trigger" tabindex="0" aria-haspopup="listbox" aria-expanded="false" data-engine="google">
+              <img id="selectedEngineIcon" src="" alt="">
+              <span id="selectedEngineName"></span>
+              <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            <div id="engineSelectList" class="custom-select-options" role="listbox" hidden>
+            </div>
+          </div>
+          <div class="search-input-group">
+            <input id="searchInput" placeholder="Buscar en la web..." />
+            <button id="searchGo">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <span>Buscar</span>
+            </button>
+          </div>
         </div>
       </section>
 
@@ -135,7 +178,7 @@
         </div>
         <div class="field">
           <label>Motor predeterminado</label>
-          <select id="defaultEngine">
+          <select>
             <option value="google">Google</option>
             <option value="duck">DuckDuckGo</option>
             <option value="bing">Bing</option>
@@ -172,7 +215,7 @@
           <p>Desarrollador de esta extensión.</p>
           <p>¡Gracias por usar el Tablero de Accesos!</p>
           <div class="social-links">
-            <a href="https://github.com/HectorDanielAyarachiFuentes" target="_blank" rel="noopener noreferrer" title="GitHub">
+            <a href="https://github.com/HectorDanielAyarachiFuentes" rel="noopener noreferrer" title="GitHub">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
             </a>
           </div>
@@ -224,12 +267,12 @@
       <li data-action="open-private">Abrir en ventana privada nueva</li>
       <hr>
       <li data-action="edit">Editar</li>
-      <li data-action="delete">Enviar a Papelera</li>
+      <li data-action="delete">Enviar a la papelera</li>
     </ul>
   </div>
 
   <template id="tileTpl">
-    <a class="tile" draggable="true" target="_blank" rel="noopener noreferrer">
+    <a class="tile" draggable="true" rel="noopener noreferrer">
       <img class="thumb" width="56" height="56" alt="">
       <div class="info">
         <div class="title"></div>

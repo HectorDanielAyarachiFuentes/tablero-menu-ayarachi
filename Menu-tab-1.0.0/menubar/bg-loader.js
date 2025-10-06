@@ -59,6 +59,25 @@
     }
   };
 
+  const applyBackgroundStyles = (mode) => {
+    const style = document.body.style;
+    style.backgroundSize = 'cover';
+    style.backgroundPosition = 'center center';
+    style.backgroundRepeat = 'no-repeat';
+
+    if (mode === 'contain') {
+      style.backgroundSize = 'contain';
+    } else if (mode === 'stretch') {
+      style.backgroundSize = '100% 100%';
+      style.backgroundPosition = 'center center';
+      style.backgroundRepeat = 'no-repeat';
+    } else if (mode === 'center') {
+      style.backgroundSize = 'auto';
+      style.backgroundPosition = 'center center'; // Asegurar que esté centrado
+    }
+    // 'cover' is the default
+  };
+
   const applyBackground = (settings) => {
     // Si no hay configuraciones, no hacer nada y dejar que el body use sus valores por defecto.
     if (!settings) {
@@ -75,6 +94,7 @@
         const randomTheme = themeKeys[Math.floor(Math.random() * themeKeys.length)];
         applyThemeVariables(randomTheme);
         document.body.style.backgroundImage = THEMES[randomTheme].background;
+        applyBackgroundStyles('cover'); // Themes always cover
       } else {
         // Es un degradado. Aplicamos colores por defecto. El fondo se pondrá en app.js.
         applyGradientVariables();
@@ -84,8 +104,10 @@
 
     if (settings.bgData) {
       document.body.style.backgroundImage = `url('${settings.bgData}')`;
+      applyBackgroundStyles(settings.bgDisplayMode);
     } else if (settings.bgUrl) {
       document.body.style.backgroundImage = `url('${settings.bgUrl}')`;
+      applyBackgroundStyles(settings.bgDisplayMode);
     } else if (settings.gradient) {
       // Si hay un degradado guardado, aplicamos los colores por defecto para evitar FOUC.
       // El degradado específico y sus colores se aplicarán en app.js
@@ -94,6 +116,7 @@
       const theme = THEMES[settings.theme];
       if (!theme) return;
       applyThemeVariables(settings.theme);
+      applyBackgroundStyles('cover'); // Themes always cover
       document.body.style.backgroundImage = theme.background;
       document.body.classList.add('theme-background');
     }
@@ -101,7 +124,7 @@
 
   // Usamos una IIFE asíncrona para poder usar await con chrome.storage
   (async function() {
-    const keys = ['theme', 'bgData', 'bgUrl', 'gradient', 'randomBg'];
+    const keys = ['theme', 'bgData', 'bgUrl', 'gradient', 'randomBg', 'bgDisplayMode'];
     const settings = await new Promise(resolve => chrome.storage.sync.get(keys, resolve));
     applyBackground(settings);
   })();

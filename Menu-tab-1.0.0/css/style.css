@@ -241,7 +241,7 @@ body.loading .tiles-section {
 .editor .row.dragging{opacity:0.5}
 .editor .row.drag-over{border-color:var(--accent-color)}
 .settings input, .settings select, .modal-card input, .modal-card select, .modal-card textarea{width:100%;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--text-color);font-family:inherit;font-size:14px; resize: vertical;}
-.settings input::placeholder, .modal-card input::placeholder{color:rgba(255,255,255,0.4)}
+.settings input::placeholder, .modal-card input::placeholder, .modal-card textarea::placeholder{color:rgba(255,255,255,0.4)}
 .btn{padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:var(--text-color);cursor:pointer;font-family:inherit;font-size:14px;transition:background-color .2s, border-color .2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;}
 .btn:hover{background-color:rgba(255,255,255,0.15)}
 .btn.primary{background:var(--accent-color);border-color:var(--accent-color);color:white}
@@ -567,6 +567,30 @@ body.theme-background {
   height: 48px;
   opacity: 0.5;
 }
+
+/* Rich Text Editor en Modal */
+.rich-editor-toolbar {
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,0.08);
+  padding: 6px;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-bottom: none;
+}
+.rich-editor-toolbar button {
+  background: transparent; border: 1px solid transparent; color: var(--text-color); opacity: 0.7;
+  width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.rich-editor-toolbar button:hover { background: rgba(255,255,255,0.1); opacity: 1; }
+.rich-text-editor {
+  min-height: 120px; 
+  max-height: 30vh; /* Altura máxima para el editor antes de que aparezca el scroll */
+  padding: 8px 12px; border-radius: 0 0 8px 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-color); font-family: inherit; font-size: 14px;
+  overflow-y: auto; /* Scroll interno para el editor */
+  scrollbar-width: thin; scrollbar-color: var(--accent-color) transparent;
+}
+.rich-text-editor:focus { outline: none; border-color: var(--accent-color); }
 
 /* Fixed Weather Widget Styles */
 .weather-widget-fixed {

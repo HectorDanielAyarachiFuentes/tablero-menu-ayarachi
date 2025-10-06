@@ -1,4 +1,4 @@
-import { $, $$, saveAndSyncSetting } from './utils.js';
+import { $, $$, saveAndSyncSetting, storageGet } from './utils.js';
 import { FolderManager } from './carpetas.js';
 import { renderTiles, trash, saveAndRender } from './tiles.js';
 import { FileSystem } from './file-system.js';
@@ -104,6 +104,15 @@ export function updateActiveGradientButton(gradient) {
     });
 }
 
+export function updateBgModeUI(isCustomBg, activeMode) {
+    const displayModeContainer = $('#bgDisplayMode');
+    if (displayModeContainer) {
+        displayModeContainer.hidden = !isCustomBg;
+    }
+    $$('#bgModeSelector button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === activeMode);
+    });
+}
 export function toggleSettings(show) {
     const settings = $('#settings');
     const isHidden = show === undefined ? settings.getAttribute('aria-hidden') === 'false' : !show;

@@ -5,21 +5,44 @@
 
 .modal[hidden]{display:none}
 .modal-card{
-  position:relative;width:360px;background:linear-gradient(180deg,#08122b,#07102a);padding:24px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.4);
-  transform: translateY(20px) scale(0.98);
+  position:relative;width:min(420px, 95vw);max-height:90vh;background:linear-gradient(180deg,#08122b,#07102a);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.4); display: flex; flex-direction: column;
+  transform: translateY(-30px);
   opacity: 0;
-  transition: transform .3s cubic-bezier(.25,.8,.25,1), opacity .3s;
+  transition: transform .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity .3s ease-out;
 }
 .modal.is-open .modal-card {
-  transform: scale(1);
+  transform: translateY(0);
   opacity: 1;
 }
-.modal-close{position:absolute;top:8px;right:8px;background:transparent;border:0;color:var(--muted);font-size:16px;cursor:pointer}
-.modal-card h4 { margin-top: 0; margin-bottom: 20px; text-align: center; }
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  flex-shrink: 0;
+}
+.modal-card h4 { margin: 0; text-align: left; flex: 1; }
+.modal-close{position:relative;background:transparent;border:0;color:var(--muted);font-size:16px;cursor:pointer; padding: 4px;}
+.modal-body {
+  padding: 0 20px 20px 20px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-color) transparent;
+}
 .modal-card label{display:block;margin-bottom:4px; font-size: 14px; margin-top: 12px;}
 .modal-card input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--muted);font-size:14px;font-family:inherit;}
 .modal-card input:focus, .settings input:focus, .settings select:focus { border-color: var(--accent); outline: none; }
-.modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:20px}
+.modal-footer{
+  display:flex;
+  gap:12px;
+  justify-content:flex-end;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  background-color: #07102a;
+  border-radius: 0 0 12px 12px;
+  flex-shrink: 0;
+}
 .modal-preview {
   position: relative;
   width: 100%;

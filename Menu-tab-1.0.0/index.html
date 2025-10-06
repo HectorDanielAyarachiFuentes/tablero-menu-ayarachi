@@ -174,6 +174,15 @@
           <label for="bgFile" class="btn file-label">Subir imagen</label>
           <input id="bgFile" type="file" accept="image/*" hidden/>
         </div>
+        <div class="field" id="bgDisplayMode" hidden>
+          <label>Modo de visualización de imagen</label>
+          <div class="button-group" id="bgModeSelector">
+            <button class="btn" data-mode="cover">Rellenar</button>
+            <button class="btn" data-mode="contain">Ajustar</button>
+            <button class="btn" data-mode="stretch">Estirar</button>
+            <button class="btn" data-mode="center">Centrar</button>
+          </div>
+        </div>
         <div class="field field-toggle">
           <label for="randomBgToggle">Fondo aleatorio en cada pestaña</label>
           <div class="switch-container">
@@ -239,31 +248,43 @@
   <!-- Edit modal -->
   <div id="modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-card">
-      <button id="closeModal" class="modal-close" aria-label="Cerrar modal">✕</button>
-      <h4 id="modalTitle">Editar Acceso</h4>
-      <div class="modal-preview">
-        <img id="modalPreviewImg" src="" alt="Vista previa del ícono">
-        <div class="preview-actions">
-          <button id="modalResetIcon" aria-label="Restablecer ícono al predeterminado">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-          </button>
-          <button id="modalEditIcon" aria-label="Cambiar imagen del ícono">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-          </button>
+      <header class="modal-header">
+        <h4 id="modalTitle">Editar Acceso</h4>
+        <button id="closeModal" class="modal-close" aria-label="Cerrar modal">✕</button>
+      </header>
+      <div class="modal-body">
+        <div class="modal-preview">
+          <img id="modalPreviewImg" src="" alt="Vista previa del ícono">
+          <div class="preview-actions">
+            <button id="modalResetIcon" aria-label="Restablecer ícono al predeterminado">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            </button>
+            <button id="modalEditIcon" aria-label="Cambiar imagen del ícono">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </button>
+          </div>
+          <input type="file" id="modalIconFile" accept="image/*" hidden>
         </div>
-        <input type="file" id="modalIconFile" accept="image/*" hidden>
+        <label>Nombre</label>
+        <input id="modalName" />
+        <div id="modalUrlGroup">
+          <label id="modalUrlLabel">Dirección</label>
+          <input id="modalUrl" />
+        </div>
+        <div id="modalContentGroup" hidden>
+          <label>Contenido de la Nota</label>
+          <div class="rich-editor-toolbar">
+            <button data-command="bold" title="Negrita (Ctrl+B)"><b>B</b></button>
+            <button data-command="italic" title="Cursiva (Ctrl+I)"><i>I</i></button>
+            <button data-command="underline" title="Subrayado (Ctrl+U)"><u>U</u></button>
+            <button data-command="insertUnorderedList" title="Lista con viñetas">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            </button>
+          </div>
+          <div id="modalContent" class="rich-text-editor" contenteditable="true"></div>
+        </div>
       </div>
-      <label>Nombre</label>
-      <input id="modalName" />
-      <div id="modalUrlGroup">
-        <label id="modalUrlLabel">Dirección</label>
-        <input id="modalUrl" />
-      </div>
-      <div id="modalContentGroup" hidden>
-        <label for="modalContent">Contenido de la Nota</label>
-        <textarea id="modalContent" rows="5"></textarea>
-      </div>
-      <div class="modal-actions">
+      <footer class="modal-footer">
         <button id="modalCancel" class="btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           Cancelar
@@ -272,7 +293,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
           Aceptar
         </button>
-      </div>
+      </footer>
     </div>
   </div>
 

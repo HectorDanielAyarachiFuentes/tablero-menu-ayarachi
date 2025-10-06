@@ -1,6 +1,6 @@
 import { $, $$, storageGet } from './utils.js';
 import { saveAndSyncSetting } from './utils.js';
-import { updateActiveThemeButton, updateActiveGradientButton, showSaveStatus, updateDataTabUI, renderGreeting, updateSliderValueSpans } from './ui.js';
+import { updateActiveThemeButton, updateActiveGradientButton, showSaveStatus, updateDataTabUI, renderGreeting, updateSliderValueSpans, updateBgModeUI } from './ui.js';
 import { tiles, trash, setTiles, setTrash, saveAndRender, renderTiles, renderTrash, renderNotes } from './tiles.js';
 import { THEMES } from './themes.js';
 import { GRADIENTS, DEFAULT_GRADIENT_COLORS } from '../utils/gradients.js';
@@ -29,12 +29,18 @@ export function initSettings(initialState) {
     $('#bgUrl').addEventListener('input', (e) => {
         if (e.target.value.trim()) document.body.style.backgroundImage = `url('${e.target.value.trim()}')`;
     });
-    $('#bgUrl').addEventListener('change', (e) => {
+    $('#bgUrl').addEventListener('change', async (e) => {
         const url = e.target.value.trim();
         if (!url) return;
-        saveAndSyncSetting({ bgUrl: url, bgData: null, gradient: null, theme: null }, applyBackgroundSettings);
+        const { bgDisplayMode } = await storageGet(['bgDisplayMode']);
+        const mode = bgDisplayMode || 'cover';
+        saveAndSyncSetting({ bgUrl: url, bgData: null, gradient: null, theme: null, bgDisplayMode: mode }, applyBackgroundSettings);
     });
 
+    $$('#bgModeSelector button').forEach(btn => {
+        btn.addEventListener('click', handleBgModeChange);
+    });
+    updateBgModeUI(initialState.isCustomBg, initialState.bgDisplayMode);
     $('#randomBgToggle').checked = initialState.randomBg || false;
     $('#randomBgToggle').addEventListener('change', (e) => {
         storageSet({ randomBg: e.target.checked }).then(showSaveStatus);
@@ -154,6 +160,29 @@ export function applyGradient(gradientId) {
     document.body.style.backgroundImage = gradient.gradient;
 }
 
+export function applyBackgroundStyles(mode = 'cover') {
+    const style = document.body.style;
+
+    if (mode === 'contain') {
+        style.backgroundSize = 'contain';
+        style.backgroundPosition = 'center center';
+        style.backgroundRepeat = 'no-repeat';
+    } else if (mode === 'stretch') {
+        style.backgroundSize = '100% 100%';
+        style.backgroundPosition = 'center center';
+        style.backgroundRepeat = 'no-repeat';
+    } else if (mode === 'center') {
+        style.backgroundSize = 'auto';
+        style.backgroundPosition = 'center center'; // Asegurar que esté centrado
+        style.backgroundRepeat = 'no-repeat';
+    } else { // 'cover' is the default
+        style.backgroundSize = 'cover';
+        style.backgroundPosition = 'center center';
+        style.backgroundRepeat = 'no-repeat';
+    }
+    document.body.classList.remove('theme-background');
+}
+
 function handleThemeChange(e) {
     const newTheme = e.target.dataset.theme;
     saveAndSyncSetting({ theme: newTheme, bgUrl: null, bgData: null, gradient: null }, applyBackgroundSettings);
@@ -168,9 +197,11 @@ function handleBgFileChange(e) {
         URL.revokeObjectURL(appState.currentBackgroundValue);
     }
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = async (e) => {
+        const { bgDisplayMode } = await storageGet(['bgDisplayMode']);
+        const mode = bgDisplayMode || 'cover';
         // Usamos saveAndSyncSetting para guardar y sincronizar
-        saveAndSyncSetting({ bgData: e.target.result, bgUrl: null, gradient: null, theme: null }, applyBackgroundSettings);
+        saveAndSyncSetting({ bgData: e.target.result, bgUrl: null, gradient: null, theme: null, bgDisplayMode: mode }, applyBackgroundSettings);
         // Actualizamos la UI después de guardar
         updateActiveThemeButton(null);
         updateActiveGradientButton(null);
@@ -178,8 +209,15 @@ function handleBgFileChange(e) {
     };
     reader.readAsDataURL(file);
 }
+
+function handleBgModeChange(e) {
+    const mode = e.currentTarget.dataset.mode;
+    saveAndSyncSetting({ bgDisplayMode: mode });
+    applyBackgroundStyles(mode);
+    updateBgModeUI(true, mode);
+}
 function applyBackgroundSettings(settings) {
-    const { bgData, bgUrl, gradient, theme } = settings;
+    const { bgData, bgUrl, gradient, theme, bgDisplayMode } = settings;
 
     // Liberar memoria del Object URL anterior si estamos cambiando a un fondo que no es un blob
     if (appState.currentBackgroundValue && appState.currentBackgroundValue.startsWith('blob:')) {
@@ -189,8 +227,13 @@ function applyBackgroundSettings(settings) {
     document.body.classList.remove('theme-background');
     document.body.style.backgroundImage = '';
 
-    if (bgData) appState.currentBackgroundValue = `url('${bgData}')`;
-    else if (bgUrl) appState.currentBackgroundValue = `url('${bgUrl}')`;
+    const isCustomBg = !!(bgData || bgUrl);
+
+    if (bgData) {
+        appState.currentBackgroundValue = `url('${bgData}')`;
+    } else if (bgUrl) {
+        appState.currentBackgroundValue = `url('${bgUrl}')`;
+    }
     else if (gradient) {
         appState.currentGradient = gradient;
         applyGradient(gradient);
@@ -199,8 +242,14 @@ function applyBackgroundSettings(settings) {
         applyTheme(theme);
     }
 
+    if (isCustomBg) {
+        applyBackgroundStyles(bgDisplayMode);
+        document.body.style.backgroundImage = appState.currentBackgroundValue;
+    }
+
     updateActiveThemeButton(theme);
     updateActiveGradientButton(gradient);
+    updateBgModeUI(isCustomBg, bgDisplayMode);
 }
 
 function handleBackgroundChange(e) {

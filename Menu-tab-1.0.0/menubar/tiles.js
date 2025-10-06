@@ -59,6 +59,14 @@ export function initTiles() {
 
     document.addEventListener('keydown', handleModalKeydown);
 
+    // Listeners para la barra de herramientas del editor de texto enriquecido
+    $$('.rich-editor-toolbar button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.execCommand(button.dataset.command, false, null);
+        });
+    });
+
     // Añadir listener para obtener el título de la página automáticamente
     const urlInput = $('#modalUrl');
     urlInput.addEventListener('paste', (e) => {
@@ -513,14 +521,14 @@ function openModal(index = null, forceType = null) {
             }
         } else if (tile.type === 'note') {
             $('#modalContentGroup').hidden = false;
-            $('#modalContent').value = tile.content || '';
+            $('#modalContent').innerHTML = tile.content || '';
         }
     } else {
         // Adding new item
         $('#modalTitle').textContent = 'Añadir Nuevo Elemento';
         $('#modalName').value = '';
-        $('#modalUrl').value = 'https://';
-        $('#modalContent').value = '';
+        $('#modalUrl').value = '';
+        $('#modalContent').innerHTML = '';
         $('#modalPreviewImg').src = '';
 
         if (forceType === 'note') {
@@ -573,7 +581,7 @@ function handleModalSave() {
                 tiles[editing].customIcon = $('#modalPreviewImg').src;
             }
         } else if (tiles[editing].type === 'note') {
-            tiles[editing].content = $('#modalContent').value;
+            tiles[editing].content = $('#modalContent').innerHTML;
         }
     } else {
         // Creando un nuevo elemento
@@ -593,7 +601,7 @@ function handleModalSave() {
             currentFolder.unshift(newLink);
         } else if (type === 'note') {
             // Añadir la nueva nota siempre al inicio del listado principal de `tiles`
-            tiles.unshift({ type: 'note', name, content: $('#modalContent').value });
+            tiles.unshift({ type: 'note', name, content: $('#modalContent').innerHTML });
         }
     }
     saveAndRender();

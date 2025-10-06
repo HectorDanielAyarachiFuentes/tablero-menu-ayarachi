@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from './config.js';
 import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateSliderValueSpans, updateDataTabUI } from './ui.js';
 import { initTiles, renderTiles, tiles, setTiles, renderEditor, setTrash, renderTrash, renderNotes } from './tiles.js';
 import { initSearch, renderFavoritesInSelect } from '../utils/search.js';
-import { initSettings, loadGradients, applyTheme, applyGradient } from './settings.js';
+import { initSettings, loadGradients, applyTheme, applyGradient, applyBackgroundStyles } from './settings.js';
 import { WeatherManager } from '../utils/tiempo.js';
 import { FileSystem } from './file-system.js';
 
@@ -66,10 +66,13 @@ async function applySettings(settings, isUpdate = false) {
   renderFavoritesInSelect();
 
   if (settings.bgData) {
-    // No guardamos el bgData en currentBackgroundValue aquí para evitar tenerlo en memoria. Se aplica en bg-loader.js
     currentBackgroundValue = `url('${settings.bgData}')`;
+    applyBackgroundStyles(settings.bgDisplayMode);
+    document.body.style.backgroundImage = currentBackgroundValue;
   } else if (settings.bgUrl) {
     currentBackgroundValue = `url('${settings.bgUrl}')`;
+    applyBackgroundStyles(settings.bgDisplayMode);
+    document.body.style.backgroundImage = currentBackgroundValue;
   } else if (settings.gradient) {
     applyGradient(settings.gradient);
     updateActiveGradientButton(settings.gradient);
@@ -97,7 +100,15 @@ async function applySettings(settings, isUpdate = false) {
     initUI();
     initTiles();
     initSearch();
-    initSettings({ currentTheme, currentGradient: settings.gradient, currentBackgroundValue, randomBg: settings.randomBg, autoSync: settings.autoSync });
+    initSettings({
+      currentTheme,
+      currentGradient: settings.gradient,
+      currentBackgroundValue,
+      randomBg: settings.randomBg,
+      autoSync: settings.autoSync,
+      bgDisplayMode: settings.bgDisplayMode,
+      isCustomBg: !!(settings.bgData || settings.bgUrl)
+    });
 
     WeatherManager.init();
     setInterval(WeatherManager.fetchAndRender, 1800000); // Actualiza el clima cada 30 minutos

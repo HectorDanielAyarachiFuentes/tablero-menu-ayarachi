@@ -1,22 +1,7 @@
-import { $, $$, storageSet, storageGet } from './utils.js';
+import { $, $$, saveAndSyncSetting } from './utils.js';
 import { FolderManager } from './carpetas.js';
 import { renderTiles, trash, saveAndRender } from './tiles.js';
 import { FileSystem } from './file-system.js';
-
-/**
- * Guarda una configuración, la almacena en el navegador y sincroniza con el archivo si autoSync está activado.
- * @param {object} setting - Un objeto con la clave y valor a guardar. Ej: { userName: 'Test' }
- */
-async function saveSetting(setting) {
-    await storageSet(setting);
-    const { autoSync } = await storageGet(['autoSync']);
-    if (autoSync) {
-        // Pasamos el objeto de configuración directamente para que se guarde en el archivo.
-        // FileSystem.saveDataToFile se encargará de obtener el resto de los datos.
-        await FileSystem.saveDataToFile(setting);
-    }
-    showSaveStatus();
-}
 
 export function initUI() {
     updateClock();
@@ -55,7 +40,7 @@ export function initUI() {
     $('#userName').addEventListener('input', (e) => {
         const name = e.target.value;
         renderGreeting(name);
-        saveSetting({ userName: name });
+        saveAndSyncSetting({ userName: name });
     });
 
     $('#panelOpacity').addEventListener('input', (e) => {
@@ -63,7 +48,7 @@ export function initUI() {
         updateSliderValueSpans();
     });
     $('#panelOpacity').addEventListener('change', (e) => {
-        saveSetting({ panelOpacity: parseFloat(e.target.value) });
+        saveAndSyncSetting({ panelOpacity: parseFloat(e.target.value) });
     });
 
     $('#panelBlur').addEventListener('input', (e) => {
@@ -71,7 +56,7 @@ export function initUI() {
         updateSliderValueSpans();
     });
     $('#panelBlur').addEventListener('change', (e) => {
-        saveSetting({ panelBlur: parseInt(e.target.value, 10) });
+        saveAndSyncSetting({ panelBlur: parseInt(e.target.value, 10) });
     });
 
     $('#emptyTrashBtn').addEventListener('click', () => {

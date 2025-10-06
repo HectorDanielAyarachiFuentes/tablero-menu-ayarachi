@@ -1,20 +1,6 @@
-import { $, storageGet, storageSet } from '../menubar/utils.js';
+import { $, storageGet, storageSet, saveAndSyncSetting } from '../menubar/utils.js';
 import { showSaveStatus } from '../menubar/ui.js';
 import { API_URLS } from '../menubar/config.js';
-import { FileSystem } from '../menubar/file-system.js';
-
-/**
- * Guarda una configuración, la almacena en el navegador y sincroniza con el archivo si autoSync está activado.
- * @param {object} setting - Un objeto con la clave y valor a guardar. Ej: { userName: 'Test' }
- */
-async function saveSetting(setting) {
-    await storageSet(setting);
-    const { autoSync } = await storageGet(['autoSync']);
-    if (autoSync) {
-        await FileSystem.saveDataToFile(setting);
-    }
-    showSaveStatus();
-}
 
 export const WeatherManager = {
     init() {
@@ -46,7 +32,7 @@ export const WeatherManager = {
     },
     handleCityChange(e) {
         const city = e.target.value.trim();
-        saveSetting({ weatherCity: city });
+        saveAndSyncSetting({ weatherCity: city });
         WeatherManager.fetchAndRender();
     },
     handleWidgetClick(e) {

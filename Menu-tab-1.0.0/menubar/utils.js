@@ -1,3 +1,6 @@
+import { FileSystem } from './file-system.js';
+import { showSaveStatus } from './ui.js';
+
 export const $ = s => document.querySelector(s);
 export const $$ = s => Array.from(document.querySelectorAll(s));
 
@@ -22,3 +25,21 @@ export const storageSet = (obj) => new Promise(resolve => {
     resolve();
   }
 });
+
+/**
+ * Guarda una configuración, la almacena en el navegador y sincroniza con el archivo si autoSync está activado.
+ * @param {object} setting - Un objeto con la clave y valor a guardar. Ej: { userName: 'Test' }
+ * @param {function(object):void} [applyCallback] - Una función opcional para aplicar los cambios en la UI.
+ */
+export async function saveAndSyncSetting(setting, applyCallback) {
+    await storageSet(setting);
+    if (applyCallback) {
+        applyCallback(setting);
+    }
+    const { autoSync } = await storageGet(['autoSync']);
+    if (autoSync) {
+        // Pasamos el objeto de configuración directamente para que se guarde en el archivo.
+        await FileSystem.saveDataToFile(setting);
+    }
+    showSaveStatus();
+}

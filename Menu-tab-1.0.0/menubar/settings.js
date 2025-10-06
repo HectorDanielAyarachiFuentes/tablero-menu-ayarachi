@@ -1,4 +1,5 @@
-import { $, $$, storageGet, storageSet } from './utils.js';
+import { $, $$, storageGet } from './utils.js';
+import { saveAndSyncSetting } from './utils.js';
 import { updateActiveThemeButton, updateActiveGradientButton, showSaveStatus, updateDataTabUI, renderGreeting, updateSliderValueSpans } from './ui.js';
 import { tiles, trash, setTiles, setTrash, saveAndRender, renderTiles, renderTrash, renderNotes } from './tiles.js';
 import { THEMES } from './themes.js';
@@ -31,7 +32,7 @@ export function initSettings(initialState) {
     $('#bgUrl').addEventListener('change', (e) => {
         const url = e.target.value.trim();
         if (!url) return;
-        applyAndSaveBackground({ bgUrl: url, bgData: null, gradient: null, theme: null });
+        saveAndSyncSetting({ bgUrl: url, bgData: null, gradient: null, theme: null }, applyBackgroundSettings);
     });
 
     $('#randomBgToggle').checked = initialState.randomBg || false;
@@ -155,7 +156,7 @@ export function applyGradient(gradientId) {
 
 function handleThemeChange(e) {
     const newTheme = e.target.dataset.theme;
-    applyAndSaveBackground({ theme: newTheme, bgUrl: null, bgData: null, gradient: null });
+    saveAndSyncSetting({ theme: newTheme, bgUrl: null, bgData: null, gradient: null }, applyBackgroundSettings);
 }
 
 function handleBgFileChange(e) {
@@ -168,15 +169,16 @@ function handleBgFileChange(e) {
     }
     const reader = new FileReader();
     reader.onload = e => {
-        applyAndSaveBackground({ bgData: e.target.result, bgUrl: null, gradient: null, theme: null });
+        // Usamos saveAndSyncSetting para guardar y sincronizar
+        saveAndSyncSetting({ bgData: e.target.result, bgUrl: null, gradient: null, theme: null }, applyBackgroundSettings);
+        // Actualizamos la UI después de guardar
         updateActiveThemeButton(null);
         updateActiveGradientButton(null);
         $('#bgUrl').value = '';
     };
     reader.readAsDataURL(file);
 }
-
-function applyAndSaveBackground(settings) {
+function applyBackgroundSettings(settings) {
     const { bgData, bgUrl, gradient, theme } = settings;
 
     // Liberar memoria del Object URL anterior si estamos cambiando a un fondo que no es un blob
@@ -199,12 +201,11 @@ function applyAndSaveBackground(settings) {
 
     updateActiveThemeButton(theme);
     updateActiveGradientButton(gradient);
-    storageSet(settings).then(showSaveStatus);
 }
 
 function handleBackgroundChange(e) {
     const gradientId = e.target.dataset.gradientId;
-    applyAndSaveBackground({ gradient: gradientId, bgUrl: null, bgData: null, theme: null });
+    saveAndSyncSetting({ gradient: gradientId, bgUrl: null, bgData: null, theme: null }, applyBackgroundSettings);
 }
 
 function handleBackgroundHover(e) {

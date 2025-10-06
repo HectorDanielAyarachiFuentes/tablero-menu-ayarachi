@@ -5,17 +5,21 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Tablero - Nueva pestaña</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="loading">
-  <script src="bg-loader.js"></script>
+  <script src="menubar/bg-loader.js"></script>
   <div class="wrap">
     <header class="header">
       <div class="brand-container">
         <button id="backBtn" class="back-btn" hidden aria-label="Volver a la carpeta anterior">‹</button>
         <div id="greeting" class="brand"><span class="placeholder" style="width:180px; height:24px;"></span></div>
+        <div id="clock" class="clock-header"><span class="placeholder" style="width:80px; height:24px;"></span></div>
       </div>
       <div class="controls">
+        <button id="openNotes" title="Notas">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"></path><polyline points="15 3 15 8 20 8"></polyline></svg>
+        </button>
         <button id="openSettings" title="Configuración">
           <svg width="24" height="24" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M30.935 4.558 13.702 6.281l-8.55 16.902 8.65 15.212L31.001 36.704l8.583-16.935L30.935 4.558Zm-8.02 6.893c4.466-.01 7.953 3.77 7.953 8.848 0 5.418-3.99 10.276-8.882 10.837-4.892.56-8.848-3.398-8.848-8.815 0-5.418 3.956-10.243 8.848-10.804.306-.035.63-.066.928-.066Z"/></svg>
         </button>
@@ -23,16 +27,9 @@
     </header>
 
     <main id="main-content" class="main">
-      <section class="live-info">
-        <div class="time-info">
-          <div id="clock" class="clock"><span class="placeholder" style="width:140px; height:52px;"></span></div>
-          <div id="date" class="date"><span class="placeholder" style="width:220px; height:20px;"></span></div>
-        </div>
-        <div id="weather" class="weather-widget">
-          <div class="weather-summary">
-            <div class="weather-details"><span class="placeholder" style="width:120px; height:48px;"></span></div>
-          </div>
-        </div>
+      <section class="top-content">
+        <!-- El saludo y la hora se movieron a la cabecera -->
+        <div id="date" class="date"><span class="placeholder" style="width:220px; height:20px;"></span></div>
       </section>
 
       <section class="search-section">
@@ -64,8 +61,32 @@
     <footer class="footer">Ayarachi © 2025</footer>
   </div>
 
+  <!-- Weather Widget - Posicionado de forma fija -->
+  <div id="weather" class="weather-widget-fixed">
+    <div class="weather-summary">
+      <div class="weather-details"><span class="placeholder" style="width:120px; height:48px;"></span></div>
+    </div>
+  </div>
+
   <!-- Overlay for settings panel -->
   <div id="overlay" class="overlay" aria-hidden="true"></div>
+
+  <!-- Notes Panel -->
+  <aside id="notes-panel" class="notes-panel" aria-hidden="true">
+    <header class="notes-header">
+      <div class="notes-title-group">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"></path><polyline points="15 3 15 8 20 8"></polyline></svg>
+        <h3>Mis Notas</h3>
+        <button id="addNote" class="add-note-btn" title="Añadir nueva nota">+</button>
+      </div>
+      <button id="closeNotes" aria-label="Cerrar notas">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </header>
+    <div class="notes-body">
+      <div id="notes-list" class="notes-list"></div>
+    </div>
+  </aside>
 
   <!-- Settings panel -->
   <aside id="settings" class="settings" aria-hidden="true" role="dialog" aria-labelledby="settings-title">
@@ -79,24 +100,65 @@
       </button>
     </header>
     <div class="settings-tabs">
-      <button class="tab-btn active" data-tab="apariencia">Apariencia</button>
-      <button class="tab-btn" data-tab="accesos">Accesos</button>
-      <button class="tab-btn" data-tab="datos">Datos</button>
-      <button class="tab-btn" data-tab="acerca-de">Acerca de</button>
+      <button class="tab-btn active" data-tab="accesos">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>Accesos</span>
+      </button>
+      <button class="tab-btn" data-tab="general">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>General</span>
+      </button>
+      <button class="tab-btn" data-tab="fondo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        <span>Fondo</span>
+      </button>
+      <button class="tab-btn" data-tab="paneles">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.89 1.45l8 4A2 2 0 0 1 22 7.24v9.53a2 2 0 0 1-1.11 1.79l-8 4a2 2 0 0 1-1.79 0l-8-4A2 2 0 0 1 2 16.76V7.24a2 2 0 0 1 1.11-1.79l8-4a2 2 0 0 1 1.78 0z"></path><polyline points="2.32 6.16 12 11 21.68 6.16"></polyline><line x1="12" y1="22.76" x2="12" y2="11"></line></svg>
+        <span>Paneles</span>
+      </button>
+      <button class="tab-btn" data-tab="datos">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        <span>Datos</span>
+      </button>
+      <button class="tab-btn" data-tab="papelera">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        <span>Papelera</span>
+      </button>
     </div>
     <div class="settings-body">
-      <!-- Tab: Apariencia -->
-      <div class="tab-pane active" id="tab-apariencia">
+      <!-- Tab: Accesos -->
+      <div class="tab-pane active" id="tab-accesos">
+        <div class="field">
+          <label>Gestionar Accesos</label>
+          <div id="editor" class="editor"></div>
+          <button id="addTile" class="btn primary full-width">+ Añadir acceso</button>
+        </div>
+      </div>
+      <!-- Tab: General -->
+      <div class="tab-pane" id="tab-general">
         <div class="field">
           <label for="userName">Tu Nombre</label>
           <input id="userName" placeholder="¿Cómo te llamas?" />
         </div>
         <div class="field">
+            <label for="weatherCity">Ubicación del Clima</label>
+            <input id="weatherCity" placeholder="Dejar en blanco para autodetectar" />
+        </div>
+      </div>
+      <!-- Tab: Fondo -->
+      <div class="tab-pane" id="tab-fondo">
+        <div class="field">
           <label>Tema</label>
           <div class="theme-list">
-            <button class="theme btn" data-theme="paisaje">🌅 Paisaje</button>
-            <button class="theme btn" data-theme="cosmico">🌌 Cósmico</button>
-            <button class="theme btn" data-theme="neon">🎨 Abstracto</button>
+            <button class="theme-btn" data-theme="paisaje" title="Tema Paisaje">
+              <span class="theme-name"></span>
+            </button>
+            <button class="theme-btn" data-theme="cosmico" title="Tema Cósmico">
+              <span class="theme-name"></span>
+            </button>
+            <button class="theme-btn" data-theme="neon" title="Tema Abstracto">
+              <span class="theme-name"></span>
+            </button>
           </div>
         </div>
         <div class="field">
@@ -112,6 +174,18 @@
           <label for="bgFile" class="btn file-label">Subir imagen</label>
           <input id="bgFile" type="file" accept="image/*" hidden/>
         </div>
+        <div class="field field-toggle">
+          <label for="randomBgToggle">Fondo aleatorio en cada pestaña</label>
+          <div class="switch-container">
+            <label class="switch">
+              <input type="checkbox" id="randomBgToggle">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <!-- Tab: Paneles -->
+      <div class="tab-pane" id="tab-paneles">
         <div class="field">
           <label for="panelOpacity">Opacidad de paneles <span id="opacityValue">5%</span></label>
           <input type="range" id="panelOpacity" min="0" max="0.5" step="0.01" value="0.05">
@@ -120,45 +194,46 @@
           <label for="panelBlur">Desenfoque de paneles <span id="blurValue">6px</span></label>
           <input type="range" id="panelBlur" min="0" max="20" step="1" value="6">
         </div>
-        <div class="field">
-            <label for="weatherCity">Ubicación del Clima</label>
-            <input id="weatherCity" placeholder="Dejar en blanco para autodetectar" />
-        </div>
-      </div>
-      <!-- Tab: Accesos -->
-      <div class="tab-pane" id="tab-accesos">
-        <div class="field">
-          <label>Gestionar Accesos</label>
-          <div id="editor" class="editor"></div>
-          <button id="addTile" class="btn primary full-width">+ Añadir acceso</button>
-        </div>
       </div>
       <!-- Tab: Datos -->
       <div class="tab-pane" id="tab-datos">
-        <div class="field">
-          <label>Importar / Exportar</label>
-          <div class="button-group">
-            <button id="exportBtn" class="btn">Exportar</button>
-            <button id="importBtn" class="btn">Importar</button>
+        <div class="field local-storage-field">
+          <label>Almacenamiento Local de Datos</label>
+          <p class="field-description">Guarda tus datos de forma segura en un archivo en tu propia computadora. Esto te da control total, privacidad y acceso sin conexión. Se recomienda elegir una carpeta en "Mis Documentos".</p>
+          <button id="selectDirBtn" class="btn primary full-width">Elegir Carpeta de Datos</button>
+          <div id="dirInfo" class="dir-path info" hidden>Para reactivar la sincronización, por favor selecciona la carpeta de nuevo. El navegador requiere este paso por seguridad.</div>
+          <div id="dirPath" class="dir-path" hidden></div>
+        </div>
+        <div class="field field-toggle">
+          <label for="autoSyncToggle">Sincronización Automática</label>
+          <div class="switch-container">
+            <label class="switch">
+              <input type="checkbox" id="autoSyncToggle" disabled>
+              <span class="slider round"></span>
+            </label>
           </div>
-          <input id="importFile" type="file" accept="application/json" style="display:none" />
+          <p class="field-description">Cuando está activado, todos los cambios se guardan automáticamente en el archivo local. Si está desactivado, deberás guardar manualmente.</p>
+          <button id="manualSaveBtn" class="btn" hidden>Guardar Cambios Manualmente</button>
         </div>
       </div>
-      <!-- Tab: Acerca de -->
-      <div class="tab-pane" id="tab-acerca-de">
-        <div class="about-section">
-          <img src="images/Dulce-flamenco.png" alt="Foto del autor" class="about-photo" />
-          <h4>Héctor Daniel Ayarachi Fuentes.</h4>
-          <p>Desarrollador de esta extensión.</p>
-          <p>¡Gracias por usar el Tablero de Accesos!</p>
-          <div class="social-links">
-            <a href="https://github.com/HectorDanielAyarachiFuentes" rel="noopener noreferrer" title="GitHub">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-            </a>
+      <!-- Tab: Papelera -->
+      <div class="tab-pane" id="tab-papelera">
+        <div class="field">
+          <div class="field-header">
+            <label>Accesos Eliminados</label>
+            <button id="emptyTrashBtn" class="btn btn-danger" title="Vaciar toda la papelera">Vaciar Papelera</button>
           </div>
+          <div id="trash-list" class="trash-list"></div>
         </div>
       </div>
     </div>
+    <footer class="settings-footer">
+      <a href="https://github.com/HectorDanielAyarachiFuentes" class="about-link" rel="noopener noreferrer" title="GitHub del desarrollador">
+        <img src="images/Dulce-flamenco.png" alt="Foto del autor" class="about-photo" />
+        <svg class="github-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        <span>Creado por Héctor Daniel Ayarachi</span>
+      </a>
+    </footer>
   </aside>
 
   <!-- Edit modal -->
@@ -180,8 +255,14 @@
       </div>
       <label>Nombre</label>
       <input id="modalName" />
-      <label id="modalUrlLabel">Dirección</label>
-      <input id="modalUrl" />
+      <div id="modalUrlGroup">
+        <label id="modalUrlLabel">Dirección</label>
+        <input id="modalUrl" />
+      </div>
+      <div id="modalContentGroup" hidden>
+        <label for="modalContent">Contenido de la Nota</label>
+        <textarea id="modalContent" rows="5"></textarea>
+      </div>
       <div class="modal-actions">
         <button id="modalCancel" class="btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -226,8 +307,8 @@
     </ul>
   </div>
 
-  <template id="tileTpl"> <a class="tile" draggable="true" rel="noopener noreferrer"> <img class="thumb" width="56" height="56" alt=""> <div class="info"> <div class="title"></div> <div class="url"></div> </div> <div class="actions"> <button class="more-btn" aria-label="Más opciones para este acceso"> <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg> </button> </div> </a> </template>
+  <template id="tileTpl"> <div class="tile" draggable="true"> <img class="thumb" width="56" height="56" alt=""> <div class="info"> <div class="title"></div> <div class="url"></div> </div> <div class="actions"> <button class="more-btn" aria-label="Más opciones para este acceso"> <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg> </button> </div> </div> </template>
 
-  <script src="app.js" type="module"></script>
+  <script src="menubar/app.js" type="module"></script>
 </body>
 </html>

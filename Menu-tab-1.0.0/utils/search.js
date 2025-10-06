@@ -1,5 +1,5 @@
-import { $, storageGet, storageSet } from './utils.js';
-import { tiles } from './tiles.js';
+import { $, storageGet, storageSet } from '../menubar/utils.js';
+import { tiles } from '../menubar/tiles.js';
 
 export function initSearch() {
     $('#searchGo').addEventListener('click', performSearch);

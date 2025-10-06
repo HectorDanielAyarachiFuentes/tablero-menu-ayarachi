@@ -20,8 +20,8 @@ export const FolderManager = {
     },
 
     // Renders a single tile (link or folder)
-    renderTile(tile, index, tpl) {
-        const node = tpl.content.firstElementChild.cloneNode(true);
+    renderTile(tile, index, tpl, rootTiles) {
+        let node = tpl.content.firstElementChild.cloneNode(true);
         node.dataset.idx = index;
         node.querySelector('.title').textContent = tile.name;
         node.style.animationDelay = `${index * 50}ms`;
@@ -32,14 +32,23 @@ export const FolderManager = {
             node.setAttribute('aria-label', `${tile.name}, carpeta`);
             node.removeAttribute('target');
             node.removeAttribute('rel');
-            node.href = '#';
             node.addEventListener('click', (e) => {
                 e.preventDefault();
                 viewPath.push(index);
                 renderTiles(); // Assumes renderTiles is a global function
             });
-        } else { // link
-            node.href = tile.url;
+        } else { // link (default)
+            // For links, we wrap the div from the template in an <a> tag
+            const linkNode = document.createElement('a');
+            linkNode.href = tile.url;
+            linkNode.rel = 'noopener noreferrer';
+            // Copy all attributes and classes from the div to the new <a>
+            for (const attr of node.attributes) {
+                linkNode.setAttribute(attr.name, attr.value);
+            }
+            linkNode.innerHTML = node.innerHTML;
+            node = linkNode;
+
             try {
                 const url = new URL(tile.url);
                 node.querySelector('.url').textContent = url.hostname.replace('www.', '');
@@ -65,7 +74,7 @@ export const FolderManager = {
             ev.currentTarget.classList.remove('drag-over-folder');
             const fromIndex = Number(ev.dataTransfer.getData('text/plain'));
             const toIndex = index;
-            const currentLevel = getTilesForCurrentView(window.tiles); // Assumes global tiles
+            const currentLevel = FolderManager.getTilesForCurrentView(rootTiles);
             const item = currentLevel.splice(fromIndex, 1)[0];
 
             if (tile.type === 'folder' && item.type === 'link') {

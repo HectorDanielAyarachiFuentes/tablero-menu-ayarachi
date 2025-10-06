@@ -1,0 +1,2 @@
+- [x] Add debounce timer variable in tiles.js
+- [x] Modify initTiles to add input event listener with debounce for URL metadata fetching

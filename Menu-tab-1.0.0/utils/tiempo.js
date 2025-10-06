@@ -1,8 +1,16 @@
-import { $, storageGet, storageSet } from './utils.js';
-import { showSaveStatus } from './ui.js';
+import { $, storageGet, storageSet } from '../menubar/utils.js';
+import { showSaveStatus } from '../menubar/ui.js';
+import { API_URLS } from '../menubar/config.js';
 
 export const WeatherManager = {
-    async init() {
+    init() {
+        // Adjuntar listeners una sola vez
+        $('#weatherCity').addEventListener('change', this.handleCityChange);
+        $('#weather').addEventListener('click', this.handleWidgetClick);
+        
+        this.fetchAndRender();
+    },
+    async fetchAndRender() {
         const weatherEl = $('#weather');
         const customCity = (await storageGet(['weatherCity'])).weatherCity;
         
@@ -13,38 +21,76 @@ export const WeatherManager = {
             return;
         }
 
-        if (customCity) { // Fetch by city name
-            try {
-                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(customCity)}&count=1&language=es&format=json`);
-                const geoData = await geoRes.json();
-                if (!geoData.results || geoData.results.length === 0) {
-                    weatherEl.textContent = 'Ciudad no encontrada.';
-                    return;
-                }
-                const { latitude, longitude, name } = geoData.results[0];
-                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=6`);
-                const weatherData = await weatherRes.json();
-                weatherData.city_name = name; // Add city name to data
-                render(weatherData);
-                storageSet({ weather: { data: weatherData, timestamp: Date.now(), city: customCity } });
-            } catch (error) {
-                console.error("Error fetching weather for city:", error);
-                weatherEl.innerHTML = '<span>No se pudo obtener el clima.</span>';
-            }
-        } else { // Auto-detect by location
-            navigator.geolocation.getCurrentPosition(async (pos) => { // Success callback for auto-detection
-                const { latitude, longitude } = pos.coords;
-                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=6`);
-                const weatherData = await weatherRes.json();
-                render(weatherData);
-                storageSet({ weather: { data: weatherData, timestamp: Date.now(), city: 'auto' } });
-            }, (err) => { // Error callback
-                console.error("Geolocation error:", err);
-                weatherEl.innerHTML = '<span>Permiso de ubicación denegado.</span>';
-            });
+        try {
+            const weatherData = customCity ? await fetchWeatherByCity(customCity) : await fetchWeatherByCoords();
+            render(weatherData);
+            storageSet({ weather: { data: weatherData, timestamp: Date.now(), city: customCity || 'auto' } });
+        } catch (error) {
+            console.error("WeatherManager Error:", error);
+            weatherEl.innerHTML = `<span>${error.message}</span>`;
         }
     },
+    handleCityChange(e) {
+        const city = e.target.value.trim();
+        storageSet({ weatherCity: city })
+            .then(showSaveStatus)
+            .then(() => WeatherManager.fetchAndRender());
+    },
+    handleWidgetClick(e) {
+        if (e.target.closest('.weather-summary')) {
+            $('#weather').classList.toggle('open');
+        }
+    }
 };
+
+async function apiFetch(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Error en la petición: ${response.statusText}`);
+    }
+    return response.json();
+}
+
+async function fetchWeatherByCity(city) {
+    const geoUrl = `${API_URLS.GEOCODING}?name=${encodeURIComponent(city)}&count=1&language=es&format=json`;
+    const geoData = await apiFetch(geoUrl);
+
+    if (!geoData.results || geoData.results.length === 0) {
+        throw new Error('Ciudad no encontrada.');
+    }
+    const { latitude, longitude, name } = geoData.results[0];
+    const weatherData = await fetchWeather(latitude, longitude);
+    weatherData.city_name = name; // Add city name to data
+    return weatherData;
+}
+
+async function fetchWeatherByCoords() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            return reject(new Error('Geolocalización no soportada.'));
+        }
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                try {
+                    const { latitude, longitude } = pos.coords;
+                    const weatherData = await fetchWeather(latitude, longitude);
+                    resolve(weatherData);
+                } catch (error) {
+                    reject(new Error('No se pudo obtener el clima.'));
+                }
+            },
+            (err) => {
+                console.error("Geolocation error:", err);
+                reject(new Error('Permiso de ubicación denegado.'));
+            }
+        );
+    });
+}
+
+function fetchWeather(lat, lon) {
+    const weatherUrl = `${API_URLS.WEATHER}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=6`;
+    return apiFetch(weatherUrl);
+}
 
 function render(data) {
     if (!data || !data.current || !data.hourly || !data.daily) return;
@@ -141,15 +187,3 @@ function getInterpretation(code) {
     };
     return interpretations[code] || { description: 'Clima desconocido', icon: '50d' };
 }
-
-// Event Listeners are attached once in the main UI module
-$('#weatherCity').addEventListener('change', (e) => {
-    const city = e.target.value.trim();
-    storageSet({ weatherCity: city }).then(showSaveStatus).then(() => WeatherManager.init());
-});
-
-$('#weather').addEventListener('click', (e) => {
-    if (e.target.closest('.weather-summary')) {
-        $('#weather').classList.toggle('open');
-    }
-});

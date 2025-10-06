@@ -1,17 +1,28 @@
 import { $, storageGet, storageSet } from './utils.js';
-import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateSliderValueSpans } from './ui.js';
-import { initTiles, renderTiles, tiles, setTiles, renderEditor } from './tiles.js';
-import { initSearch, renderFavoritesInSelect } from './search.js';
-import { initSettings, loadGradients } from './settings.js';
-import { WeatherManager } from './tiempo.js';
+import { STORAGE_KEYS } from './config.js';
+
+import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateSliderValueSpans, updateDataTabUI } from './ui.js';
+import { initTiles, renderTiles, tiles, setTiles, renderEditor, setTrash, renderTrash, renderNotes } from './tiles.js';
+import { initSearch, renderFavoritesInSelect } from '../utils/search.js';
+import { initSettings, loadGradients, applyTheme, applyGradient } from './settings.js';
+import { WeatherManager } from '../utils/tiempo.js';
+import { FileSystem } from './file-system.js';
+
 
 let currentTheme = 'paisaje'; // This can be moved if themes get more complex
 let currentBackgroundValue = '';
 
 async function init(){
   // 1. Carga inicial desde la caché local (muy rápido)
-  const cachedSettings = await storageGet(['tiles','engine','theme','bgData','bgUrl', 'userName', 'weatherCity', 'gradient', 'panelOpacity', 'panelBlur'], true);
-  await applySettings(cachedSettings, false);
+  // Primero, intenta cargar desde el archivo local si existe el handle.
+  let settings = await FileSystem.loadDataFromFile();
+  let loadedFromFile = !!settings;
+
+  if (!settings) {
+    // Si no se pudo cargar del archivo, usa el almacenamiento del navegador
+    settings = await storageGet(STORAGE_KEYS);
+  }
+  await applySettings(settings, false);
 
   // 2. Espera a que las fuentes estén cargadas para evitar FOUC
   if (document.fonts && document.fonts.ready) {
@@ -23,9 +34,11 @@ async function init(){
   // 3. Muestra la UI inmediatamente con los datos de la caché
   document.body.classList.remove('loading');
 
-  // 4. En segundo plano, busca actualizaciones desde la nube (sync) y vuelve a aplicar si hay cambios
-  const syncedSettings = await storageGet(['tiles','engine','theme','bgData','bgUrl', 'userName', 'weatherCity', 'gradient', 'panelOpacity', 'panelBlur'], false);
-  await applySettings(syncedSettings, true);
+  // 4. En segundo plano, si no cargamos del archivo, busca actualizaciones desde chrome.storage.sync
+  if (!loadedFromFile) {
+    const syncedSettings = await storageGet(STORAGE_KEYS, false);
+    await applySettings(syncedSettings, true);
+  }
 }
 
 async function applySettings(settings, isUpdate = false) {
@@ -44,6 +57,9 @@ async function applySettings(settings, isUpdate = false) {
   });
   setTiles(processedTiles);
 
+  const initialTrash = settings.trash || [];
+  setTrash(initialTrash);
+
   $('#userName').value = settings.userName || '';
   $('#weatherCity').value = settings.weatherCity || '';
   renderGreeting(settings.userName);
@@ -55,12 +71,11 @@ async function applySettings(settings, isUpdate = false) {
   } else if (settings.bgUrl) {
     currentBackgroundValue = `url('${settings.bgUrl}')`;
   } else if (settings.gradient) {
+    applyGradient(settings.gradient);
     updateActiveGradientButton(settings.gradient);
-    currentBackgroundValue = settings.gradient;
   } else {
     currentTheme = settings.theme || 'paisaje';
-    currentBackgroundValue = `url('images/${currentTheme}.jpg')`;
-    updateActiveThemeButton(currentTheme);
+    applyTheme(currentTheme);
   }
 
   const panelOpacity = settings.panelOpacity ?? 0.05;
@@ -75,15 +90,17 @@ async function applySettings(settings, isUpdate = false) {
   loadGradients(settings.gradient);
   renderTiles();
   renderEditor();
+  renderNotes();
+  renderTrash();
 
   if (!isUpdate) {
     initUI();
     initTiles();
     initSearch();
-    initSettings({ currentTheme, currentBackgroundValue });
+    initSettings({ currentTheme, currentGradient: settings.gradient, currentBackgroundValue, randomBg: settings.randomBg, autoSync: settings.autoSync });
 
     WeatherManager.init();
-    setInterval(WeatherManager.init, 1800000); // Actualiza el clima cada 30 minutos
+    setInterval(WeatherManager.fetchAndRender, 1800000); // Actualiza el clima cada 30 minutos
     loadNonCriticalCSS();
   }
 }
@@ -93,6 +110,6 @@ init();
 function loadNonCriticalCSS() {
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = 'non-critical.css';
+  link.href = 'css/non-critical.css';
   document.head.appendChild(link);
 }

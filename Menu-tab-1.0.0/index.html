@@ -6,87 +6,32 @@
   <title>Tablero - Nueva pestaña</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <style>
-    body.loading {
-      opacity: 0;
-      transition: opacity 0.3s ease-in;
-    }
-  </style>
-  <style>
-    .about-section { text-align: center; padding: 20px; }
-    .about-photo {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid var(--primary-color, #fff);
-      margin-bottom: 15px;
-    }
-    .social-links { margin-top: 20px; display: flex; justify-content: center; gap: 16px; }
-    .social-links a { color: var(--muted); text-decoration: none; transition: transform .2s; display: inline-block; }
-    .social-links a:hover { transform: scale(1.2); color: var(--accent); }
-    .social-links svg {
-      width: 28px;
-      height: 28px;
-    }
-    .search-section {
-      position: relative;
-      z-index: 10;
-    }
-    /* Estilos para el nuevo selector de buscador */
-    .search-card { position: relative; }
-    .custom-select-wrapper { display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; border-right: 1px solid rgba(255,255,255,0.15); }
-    .custom-select-trigger { cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: 10px 0 0 10px; transition: background-color .2s; height: 100%; }
-    .custom-select-trigger:hover { background-color: rgba(255,255,255,0.2); }
-    .custom-select-trigger img { width: 20px; height: 20px; }
-    .custom-select-trigger .arrow { width: 16px; height: 16px; stroke: currentColor; transition: transform .2s; }
-    .custom-select-wrapper.open .arrow { transform: rotate(180deg); }
-    .custom-select-options {
-      position: absolute;
-      top: calc(100% + 5px);
-      left: 0;
-      background-color: var(--panel-bg);
-      border-radius: 8px;
-      padding: 8px;
-      z-index: 100;
-      width: 200px;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    .custom-select-options .option { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 6px; cursor: pointer; }
-    .custom-select-options .option:hover { background-color: rgba(255,255,255,0.1); }
-    /* Fix para el apilamiento (z-index) en la barra de búsqueda */
-    .search-input-group { 
-      flex: 1;
-      display: flex;
-      position: relative; /* Crea un contexto de apilamiento inferior */
-      z-index: 1; 
-    }
-  </style>
 </head>
 <body class="loading">
   <script src="bg-loader.js"></script>
   <div class="wrap">
     <header class="header">
       <div class="brand-container">
-        <button id="backBtn" class="back-btn" hidden>‹</button>
-        <div id="greeting" class="brand"></div>
+        <button id="backBtn" class="back-btn" hidden aria-label="Volver a la carpeta anterior">‹</button>
+        <div id="greeting" class="brand"><span class="placeholder" style="width:180px; height:24px;"></span></div>
       </div>
       <div class="controls">
         <button id="openSettings" title="Configuración">
-          <img src="images/tuerca.svg" alt="Configuración" />
+          <svg width="24" height="24" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M30.935 4.558 13.702 6.281l-8.55 16.902 8.65 15.212L31.001 36.704l8.583-16.935L30.935 4.558Zm-8.02 6.893c4.466-.01 7.953 3.77 7.953 8.848 0 5.418-3.99 10.276-8.882 10.837-4.892.56-8.848-3.398-8.848-8.815 0-5.418 3.956-10.243 8.848-10.804.306-.035.63-.066.928-.066Z"/></svg>
         </button>
       </div>
     </header>
 
-    <main class="main">
+    <main id="main-content" class="main">
       <section class="live-info">
         <div class="time-info">
-          <div id="clock" class="clock"></div>
-          <div id="date" class="date"></div>
+          <div id="clock" class="clock"><span class="placeholder" style="width:140px; height:52px;"></span></div>
+          <div id="date" class="date"><span class="placeholder" style="width:220px; height:20px;"></span></div>
         </div>
         <div id="weather" class="weather-widget">
-          <!-- Weather content will be injected by JS -->
+          <div class="weather-summary">
+            <div class="weather-details"><span class="placeholder" style="width:120px; height:48px;"></span></div>
+          </div>
         </div>
       </section>
 
@@ -102,7 +47,7 @@
             </div>
           </div>
           <div class="search-input-group">
-            <input id="searchInput" placeholder="Buscar en la web..." />
+            <input id="searchInput" placeholder="Buscar en la web..." aria-label="Término de búsqueda" />
             <button id="searchGo">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               <span>Buscar</span>
@@ -116,7 +61,7 @@
       </section>
     </main>
 
-    <footer class="footer">Diseño: Ultimate • Personalizable</footer>
+    <footer class="footer">Ayarachi © 2025</footer>
   </div>
 
   <!-- Overlay for settings panel -->
@@ -125,9 +70,12 @@
   <!-- Settings panel -->
   <aside id="settings" class="settings" aria-hidden="true" role="dialog" aria-labelledby="settings-title">
     <header class="settings-header">
-      <h3 id="settings-title">Configuración</h3>
+      <div>
+        <h3 id="settings-title">Configuración</h3>
+        <div id="saveStatus" class="save-status"></div>
+      </div>
       <button id="closeSettings" aria-label="Cerrar configuración">
-        <img src="images/cerrar.svg" alt="Cerrar" />
+    <img src="images/cerrar.svg" alt="Ícono de cerrar" width="24" height="24">
       </button>
     </header>
     <div class="settings-tabs">
@@ -176,17 +124,6 @@
             <label for="weatherCity">Ubicación del Clima</label>
             <input id="weatherCity" placeholder="Dejar en blanco para autodetectar" />
         </div>
-        <div class="field">
-          <label>Motor predeterminado</label>
-          <select>
-            <option value="google">Google</option>
-            <option value="duck">DuckDuckGo</option>
-            <option value="bing">Bing</option>
-            <option value="youtube">YouTube</option>
-            <option value="wiki">Wikipedia</option>
-            <option value="ecosia">Ecosia</option>
-          </select>
-        </div>
       </div>
       <!-- Tab: Accesos -->
       <div class="tab-pane" id="tab-accesos">
@@ -210,8 +147,8 @@
       <!-- Tab: Acerca de -->
       <div class="tab-pane" id="tab-acerca-de">
         <div class="about-section">
-          <img src="images/Dulce-flamenco.png" alt="Foto del autor" class="about-photo">
-          <h4>Héctor Daniel Ayarachi Fuentes</h4>
+          <img src="images/Dulce-flamenco.png" alt="Foto del autor" class="about-photo" />
+          <h4>Héctor Daniel Ayarachi Fuentes.</h4>
           <p>Desarrollador de esta extensión.</p>
           <p>¡Gracias por usar el Tablero de Accesos!</p>
           <div class="social-links">
@@ -232,10 +169,10 @@
       <div class="modal-preview">
         <img id="modalPreviewImg" src="" alt="Vista previa del ícono">
         <div class="preview-actions">
-          <button id="modalResetIcon" title="Restablecer ícono">
+          <button id="modalResetIcon" aria-label="Restablecer ícono al predeterminado">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
           </button>
-          <button id="modalEditIcon" title="Cambiar imagen">
+          <button id="modalEditIcon" aria-label="Cambiar imagen del ícono">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
           </button>
         </div>
@@ -261,34 +198,36 @@
   <!-- Menú contextual para los accesos -->
   <div id="contextMenu" class="context-menu" hidden>
     <ul>
-      <li data-action="favorite">Marcar como favorito</li>
-      <li data-action="open-tab">Abrir en pestaña nueva</li>
-      <li data-action="open-window">Abrir en ventana nueva</li>
-      <li data-action="open-private">Abrir en ventana privada nueva</li>
+      <li><button data-action="favorite">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <span>Marcar como favorito</span>
+      </button></li>
+      <li><button data-action="open-tab">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        <span>Abrir en pestaña nueva</span>
+      </button></li>
+      <li><button data-action="open-window">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"></path><path d="M14 3h7v7"></path><path d="M11 13 21 3"></path></svg>
+        <span>Abrir en ventana nueva</span>
+      </button></li>
+      <li><button data-action="open-private">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2"></path><path d="M12 21v2"></path><path d="m4.22 4.22 1.42 1.42"></path><path d="m18.36 18.36 1.42 1.42"></path><path d="M1 12h2"></path><path d="M21 12h2"></path><path d="m4.22 19.78 1.42-1.42"></path><path d="m18.36 5.64 1.42-1.42"></path></svg>
+        <span>Abrir en ventana privada</span>
+      </button></li>
       <hr>
-      <li data-action="edit">Editar</li>
-      <li data-action="delete">Enviar a la papelera</li>
+      <li><button data-action="edit">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <span>Editar</span>
+      </button></li>
+      <li><button data-action="delete">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+        <span>Enviar a la papelera</span>
+      </button></li>
     </ul>
   </div>
 
-  <template id="tileTpl">
-    <a class="tile" draggable="true" rel="noopener noreferrer">
-      <img class="thumb" width="56" height="56" alt="">
-      <div class="info">
-        <div class="title"></div>
-        <div class="url"></div>
-      </div>
-      <div class="actions">
-        <button class="more-btn" title="Más opciones">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-        </button>
-      </div>
-    </a>
-  </template>
+  <template id="tileTpl"> <a class="tile" draggable="true" rel="noopener noreferrer"> <img class="thumb" width="56" height="56" alt=""> <div class="info"> <div class="title"></div> <div class="url"></div> </div> <div class="actions"> <button class="more-btn" aria-label="Más opciones para este acceso"> <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg> </button> </div> </a> </template>
 
-  <script src="utils.js"></script>
-  <script src="carpetas.js"></script>
-  <script src="tiempo.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js" type="module"></script>
 </body>
 </html>

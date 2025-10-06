@@ -1,10 +1,14 @@
-const FolderManager = (() => {
-    let viewPath = []; // Private state for folder path
+import { renderTiles, saveAndRender } from './tiles.js';
+
+let viewPath = []; // Private state for folder path
+
+export const FolderManager = {
 
     // Gets the array of tiles for the current folder view
-    function getTilesForCurrentView(rootTiles) {
+    getTilesForCurrentView(rootTiles) {
         let currentLevel = rootTiles;
         for (const index of viewPath) {
+            // Ensure we are traversing into a valid folder
             if (currentLevel[index] && currentLevel[index].type === 'folder') {
                 currentLevel = currentLevel[index].children;
             } else {
@@ -13,10 +17,10 @@ const FolderManager = (() => {
             }
         }
         return currentLevel;
-    }
+    },
 
     // Renders a single tile (link or folder)
-    function renderTile(tile, index, tpl) {
+    renderTile(tile, index, tpl) {
         const node = tpl.content.firstElementChild.cloneNode(true);
         node.dataset.idx = index;
         node.querySelector('.title').textContent = tile.name;
@@ -25,6 +29,7 @@ const FolderManager = (() => {
         if (tile.type === 'folder') {
             node.classList.add('folder');
             node.querySelector('.url').textContent = `${tile.children.length} elemento(s)`;
+            node.setAttribute('aria-label', `${tile.name}, carpeta`);
             node.removeAttribute('target');
             node.removeAttribute('rel');
             node.href = '#';
@@ -38,7 +43,7 @@ const FolderManager = (() => {
             try {
                 const url = new URL(tile.url);
                 node.querySelector('.url').textContent = url.hostname.replace('www.', '');
-                node.querySelector('.thumb').src = `https://www.google.com/s2/favicons?sz=64&domain=${url.hostname}`;
+                if (url.hostname && url.hostname.includes('.')) node.querySelector('.thumb').src = `https://www.google.com/s2/favicons?sz=64&domain=${url.hostname}`;
             } catch (e) {
                 node.querySelector('.url').textContent = tile.url;
                 node.querySelector('.thumb').src = '';
@@ -57,7 +62,7 @@ const FolderManager = (() => {
         node.addEventListener('dragleave', () => node.classList.remove('drag-over-folder'));
         node.addEventListener('drop', ev => {
             ev.preventDefault();
-            node.classList.remove('drag-over-folder');
+            ev.currentTarget.classList.remove('drag-over-folder');
             const fromIndex = Number(ev.dataTransfer.getData('text/plain'));
             const toIndex = index;
             const currentLevel = getTilesForCurrentView(window.tiles); // Assumes global tiles
@@ -72,29 +77,21 @@ const FolderManager = (() => {
         });
 
         return node;
-    }
+    },
 
-    function goBack() {
+    goBack() {
         if (viewPath.length > 0) {
             viewPath.pop();
-            renderTiles();
+            return true; // Indicate that the view changed
         }
-    }
+        return false;
+    },
 
-    function isRootView() {
+    isRootView() {
         return viewPath.length === 0;
-    }
+    },
 
-    function getCurrentPath(){
+    getCurrentPath() {
         return viewPath;
     }
-
-    // Public API
-    return {
-        getTilesForCurrentView,
-        renderTile,
-        goBack,
-        isRootView,
-        getCurrentPath
-    };
-})();
+};

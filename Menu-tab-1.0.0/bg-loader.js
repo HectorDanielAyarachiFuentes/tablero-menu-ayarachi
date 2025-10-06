@@ -7,7 +7,6 @@
   const applyBackground = (settings) => {
     // Si no hay configuraciones, no hacer nada y dejar que el body use sus valores por defecto.
     if (!settings) {
-      document.body.classList.remove('loading');
       return;
     }
 
@@ -18,10 +17,10 @@
     } else if (settings.gradient) {
       document.body.style.backgroundImage = settings.gradient;
     } else if (settings.theme) {
-      document.body.setAttribute('data-theme', settings.theme);
+      // Aplica la imagen de fondo del tema directamente para evitar la carga de todas las imágenes.
+      document.body.style.backgroundImage = `url('images/${settings.theme}.jpg')`;
+      document.body.classList.add('theme-background');
     }
-    // Una vez aplicado el fondo, eliminamos la clase 'loading' para mostrar el contenido.
-    document.body.classList.remove('loading');
   };
 
   // Usamos una IIFE asíncrona para poder usar await con chrome.storage

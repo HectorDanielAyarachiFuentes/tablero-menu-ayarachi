@@ -1,4 +1,5 @@
 import { storageGet, storageSet } from './utils.js';
+import { STORAGE_KEYS } from './config.js';
 
 const FILE_NAME = 'tablero-data.json';
 let dirHandle = null;
@@ -65,8 +66,11 @@ export const FileSystem = {
         if (!handle) return;
 
         try {
-            const allSettings = await storageGet(null); // Obtiene todos los ajustes
+            const allSettings = await storageGet(STORAGE_KEYS); // Obtiene todos los ajustes usando las claves definidas
             const fullData = { ...allSettings, ...dataToSave };
+
+            // Excluimos los datos del clima para no guardarlos en el archivo, solo la ciudad.
+            delete fullData.weather;
 
             const fileHandle = await handle.getFileHandle(FILE_NAME, { create: true });
             const writable = await fileHandle.createWritable();

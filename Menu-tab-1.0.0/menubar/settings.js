@@ -1,9 +1,10 @@
 import { $, $$, storageGet, storageSet } from './utils.js';
 import { updateActiveThemeButton, updateActiveGradientButton, showSaveStatus, updateDataTabUI, renderGreeting, updateSliderValueSpans } from './ui.js';
-import { tiles, trash, setTiles, saveAndRender, renderTrash, renderNotes } from './tiles.js';
+import { tiles, trash, setTiles, setTrash, saveAndRender, renderTiles, renderTrash, renderNotes } from './tiles.js';
 import { THEMES } from './themes.js';
 import { GRADIENTS, DEFAULT_GRADIENT_COLORS } from '../utils/gradients.js';
 import { FileSystem } from './file-system.js';
+import { STORAGE_KEYS } from './config.js';
 
 let appState = {};
 let importInput;
@@ -247,7 +248,7 @@ function handleBackgroundLeave() {
 }
 
 async function exportData() {
-    const allData = await storageGet(null);
+    const allData = await storageGet(STORAGE_KEYS);
     const json = JSON.stringify(allData, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);

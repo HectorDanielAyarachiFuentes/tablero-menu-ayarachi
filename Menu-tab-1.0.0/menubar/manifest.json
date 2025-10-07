@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Tablero - Nueva Pestaña",
+  "version": "1.0.0",
+  "description": "Un tablero personalizable para tu página de nueva pestaña.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": [
+    "storage",
+    "geolocation"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data: https://* blob:;"
+  },
+  "web_accessible_resources": [{
+    "resources": ["menubar/file-worker.js"],
+    "matches": ["<all_urls>"]
+  }]
+}

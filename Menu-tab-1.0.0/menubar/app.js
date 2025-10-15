@@ -5,12 +5,12 @@ import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientBu
 import { initTiles, renderTiles, tiles, setTiles, renderEditor, renderNotes, setTrash, renderTrash } from './tiles.js';
 import { initSearch, renderFavoritesInSelect } from '../utils/search.js';
 import { initSettings, loadGradients, applyTheme, applyGradient, applyBackgroundStyles } from './settings.js';
+import { GRADIENTS } from '../utils/gradients.js';
 import { WeatherManager } from '../utils/tiempo.js';
 import { DOODLES, initDoodleSettings, updateDoodleSelectionUI } from './doodles.js';
 import { FileSystem } from './file-system.js';
 
 
-let currentTheme = 'paisaje'; // This can be moved if themes get more complex
 let currentBackgroundValue = '';
 
 /**
@@ -117,8 +117,7 @@ async function applySettings(settings, isUpdate = false) {
     initUI();
     initTiles();
     initSearch();
-    initSettings({
-      currentTheme,
+    initSettings({      
       currentGradient: settings.gradient,
       currentBackgroundValue,
       randomBg: settings.randomBg,
@@ -171,7 +170,7 @@ export async function getBookmarks() {
  * Decide qué fondo mostrar según la prioridad: Doodle > Imagen > Degradado > Tema.
  */
 export async function updateBackground() {
-  const settings = await storageGet(['doodle', 'bgData', 'bgUrl', 'gradient', 'theme', 'bgDisplayMode']);
+  const settings = await storageGet(['doodle', 'bgData', 'bgUrl', 'gradient', 'bgDisplayMode']);
   const doodleId = settings.doodle || 'none';
   const doodle = DOODLES.find(d => d.id === doodleId);
 
@@ -203,14 +202,14 @@ export async function updateBackground() {
       document.body.style.backgroundImage = `url('${settings.bgUrl}')`;
     } else if (settings.gradient) {
       applyGradient(settings.gradient);
-    } else {
-      applyTheme(settings.theme || 'paisaje');
+    } else { // Por defecto, si no hay nada, aplicar un degradado
+      applyGradient(GRADIENTS[0].id);
     }
   }
 
   // Actualizar siempre la UI de la configuración
   updateActiveGradientButton(settings.gradient);
-  updateActiveThemeButton(settings.theme);
+  updateActiveThemeButton(null); // Ya no hay temas
   updateDoodleSelectionUI(doodleId);
 }
 

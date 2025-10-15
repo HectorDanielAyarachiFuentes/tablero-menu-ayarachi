@@ -1,6 +1,6 @@
 import { $, $$, storageGet, storageSet } from './utils.js';
 import { saveAndSyncSetting } from './utils.js'; // storageSet is also used directly, so it's better to import it explicitly.
-import { updateActiveThemeButton, updateActiveGradientButton, showSaveStatus, updateDataTabUI, renderGreeting, updateSliderValueSpans, updateBgModeUI } from './ui.js';
+import { updateActiveGradientButton, showSaveStatus, updateDataTabUI, renderGreeting, updateSliderValueSpans, updateBgModeUI } from './ui.js';
 import { updateBackground } from './app.js';
 import { tiles, trash, setTiles, setTrash, saveAndRender, renderTiles, renderTrash, renderNotes } from './tiles.js';
 import { THEMES } from './themes-config.js';
@@ -190,11 +190,6 @@ export function applyBackgroundStyles(mode = 'cover') {
     document.body.classList.remove('theme-background');
 }
 
-function handleThemeChange(e) {
-    const newTheme = e.target.dataset.theme;
-    saveAndSyncSetting({ theme: newTheme, bgUrl: null, bgData: null, gradient: null, doodle: 'none' }, updateBackground);
-}
-
 function handleBgFileChange(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -208,7 +203,7 @@ function handleBgFileChange(e) {
         const { bgDisplayMode } = await storageGet(['bgDisplayMode']);
         const mode = bgDisplayMode || 'cover';
         // Guardamos y sincronizamos, asegurándonos de desactivar el doodle
-        saveAndSyncSetting({ bgData: e.target.result, bgUrl: null, gradient: null, theme: null, doodle: 'none', bgDisplayMode: mode }, updateBackground);
+        saveAndSyncSetting({ bgData: e.target.result, bgUrl: null, gradient: null, doodle: 'none', bgDisplayMode: mode }, updateBackground);
         // Actualizamos la UI después de guardar
         $('#bgUrl').value = '';
     };
@@ -223,7 +218,11 @@ function handleBgModeChange(e) {
 
 function handleBackgroundChange(e) {
     const gradientId = e.target.dataset.gradientId;
-    saveAndSyncSetting({ gradient: gradientId, bgUrl: null, bgData: null, theme: null, doodle: 'none' }, updateBackground);
+    saveAndSyncSetting({ gradient: gradientId, bgUrl: null, bgData: null, doodle: 'none' }, updateBackground);
+    // Actualizamos el estado de la aplicación para que el hover no lo revierta al anterior.
+    appState.currentGradient = gradientId;
+    appState.currentBackgroundValue = null;
+    appState.currentTheme = null;
 }
 
 function handleBackgroundHover(e) {
@@ -236,13 +235,6 @@ function handleBackgroundHover(e) {
     }
 }
 
-function handleThemeHover(e) {
-    const themeId = e.target.dataset.theme;
-    const theme = THEMES[themeId];
-    if (!theme) return;
-    document.body.style.backgroundImage = theme.background;
-}
-
 function handleBackgroundLeave() {
     // Restaura el fondo a la configuración guardada
     let backgroundToRestore;
@@ -250,9 +242,6 @@ function handleBackgroundLeave() {
     if (appState.currentGradient) {
         const gradient = GRADIENTS.find(g => g.id === appState.currentGradient);
         backgroundToRestore = gradient ? gradient.gradient : 'none';
-    } else if (appState.currentTheme) {
-        const theme = THEMES[appState.currentTheme];
-        backgroundToRestore = theme ? theme.background : 'none';
     } else {
         backgroundToRestore = appState.currentBackgroundValue || 'none';
     }
@@ -308,7 +297,6 @@ async function handleImport(e) {
                 $('#userName').value = data.userName;
                 renderGreeting(data.userName);
             }
-            if (data.currentTheme) applyTheme(data.currentTheme);
             if (data.currentGradient) applyGradient(data.currentGradient);
             if (data.panelOpacity) {
                 $('#panelOpacity').value = data.panelOpacity;

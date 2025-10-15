@@ -1,18 +1,29 @@
 {
   "manifest_version": 3,
-  "name": "Tablero de Accesos - New Tab",
-  "description": "Reemplaza la pestaña nueva con un tablero personalizable: buscador configurable, temas y accesos rápidos.",
+  "name": "Tablero - Nueva Pestaña",
   "version": "1.0.0",
+  "description": "Un tablero personalizable para tu página de nueva pestaña.",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "permissions": [
-    "storage",
-    "geolocation"
-  ],
   "chrome_url_overrides": {
     "newtab": "index.html"
-  }
+  },
+  "background": {
+    "service_worker": "menubar/background.js"
+  },
+  "permissions": [
+    "storage",
+    "geolocation",
+    "bookmarks"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data: https://* blob:;"
+  },
+  "web_accessible_resources": [{
+    "resources": ["menubar/file-worker.js"],
+    "matches": ["<all_urls>"]
+  }]
 }

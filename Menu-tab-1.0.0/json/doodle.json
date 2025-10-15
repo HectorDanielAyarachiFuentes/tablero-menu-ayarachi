@@ -1,0 +1,67 @@
+[
+  {
+    "id": "none",
+    "name": "Ninguno",
+    "template": ""
+  },
+  {
+    "id": "lluvia-estrellas",
+    "name": "Lluvia de Estrellas",
+    "template": ":doodle {\n        @grid: 1x20 / 100vw 100vh;\n      }\n\n      @size: @r(1px, 2px) @r(50px, 150px);\n      background: linear-gradient(to bottom,\n        hsla(0, 0%, 100%, @r(.5, 1)),\n        hsla(0, 0%, 100%, 0)\n      );\n      filter: drop-shadow(0 0 8px #fff);\n      position: absolute;\n      left: @r(100vw);\n      top: @r(-10vh, 90vh);\n      animation: fall @r(8s, 20s) linear infinite;\n      animation-delay: -@r(20s);\n\n      @keyframes fall {\n        to { transform: translate(-100vw, 100vh) rotate(45deg); }\n      }"
+  },
+  {
+    "id": "circulos-transicion",
+    "name": "Círculos en Transición",
+    "template": ":doodle {\n        @grid: 8 / 90%;\n        @shape: circle;\n      }\n      transition: .2s @r(.6s);\n      border-radius: @pick(100% 0, 0 100%);\n      transform: scale(@r(.25, 1.25));\n      background: hsla(\n        calc(240 - 6 * @x * @y),\n        70%, 68%, @r(.8)\n      );"
+  },
+  {
+    "id": "lineas-neon",
+    "name": "Líneas de Neón",
+    "template": ":doodle {\n        @grid: 14 / 100vmax;\n      }\n      @random {\n        border-left: 1px solid #5d81bc;\n      }\n      @random {\n        border-top: 1px solid #5d81bc;\n      }\n      @random(.25) {\n        background: linear-gradient(\n          @p(#fff, tan, #5d81bc), @lp\n        )\n        50% / @r(60%) @lr\n        no-repeat;\n      }\n      @random {\n        filter: drop-shadow(0 0 10px #fff);\n      }"
+  },
+  {
+    "id": "trazos-svg",
+    "name": "Trazos SVG",
+    "template": ":doodle {\n        @grid: 1 / 100vw 100vh;\n        display: grid;\n        place-items: center;\n      }\n      @content: @svg(\n        viewBox: 0 0 16 16 p 1;\n        stroke: #aeacfb;\n        stroke-width: .1;\n        stroke-linecap: round;\n        line*16x16 {\n          draw: @r(2s);\n          x1, y1, x2, y2: @p(\n            @nx(-1) @ny(-1) @nx @ny,\n            @nx @ny(-1) @nx(-1) @ny,\n            @nx @ny(-1) @nx @ny\n          );\n        }\n      );"
+  },
+  {
+    "id": "flor-radial",
+    "name": "Flor Radial",
+    "template": ":doodle {\n        @grid: 1 / 35% auto;\n        position: absolute;\n        top: 0;\n        left: 0;\n        background: radial-gradient(pink, yellow, red, red);\n        mask: @svg-polygon(split: 400; scale: .7; r: cos(7t)^4 + sin(7t) +.3;);\n      }"
+  },
+  {
+    "id": "mosaico-cajas",
+    "name": "Mosaico de Cajas",
+    "template": "<style>\n        :doodle {\n          @grid: 1 / 100vw 100vh / #0a0c27;\n          background-size: 200px 200px;\n          background-image: @doodle(\n            @grid: 6 / 100%;\n            @size: 4px;\n            font-size: 4px;\n            color: hsl(@r240, 30%, 50%);\n            box-shadow: @m3x5(\n              calc(4em - @nx * 1em) calc(@ny * 1em)\n                @p(@m3(currentColor), @m2(transparent)),\n              calc(2em + @nx * 1em) calc(@ny * 1em)\n                @lp\n            );\n          );\n        }\n      </style>"
+  },
+  {
+    "id": "caracteres-aleatorios",
+    "name": "Caracteres Aleatorios",
+    "template": "<style>\n        :doodle {\n          @grid: 20 / 100vmax / #0a0c27;\n        }\n        :after {\n          content: @code.r(0x2500, 0x257f);\n          color: hsla(@r360, 70%, 70%, @r.9);\n          position: absolute;\n          font-size: 5cqmax;\n          font-family: sans-serif;\n        }\n      </style>"
+  },
+  {
+    "id": "galaxia-espiral",
+    "name": "Galaxia Espiral",
+    "template": "<style>\n        :doodle {\n          @grid: 1 / 100vw 100vh / #125cde;\n          background-size: cover;\n          background-position: 50% 50%;\n          background-image: @doodle(\n            @content: @svg(\n              viewBox: -50 -50 100 100 p -20;\n              circle*500 {\n                fill: hsl(@calc(120-90*@sin.n), 80%, 50%);\n                r: @sqrt(@n/60);\n                cx: @(@n*.618^4 * cos(2*π*@n*.618));\n                cy: @(@n*.618^4 * sin(2*π*@n*.618));\n              }\n            );\n          );\n        }\n      </style>"
+  },
+  {
+    "id": "lineas-aleatorias-svg",
+    "name": "Líneas Aleatorias SVG",
+    "template": "<style>\n        :doodle {\n          @grid: 1 / 100vw 100vh;\n          background-size: 100%;\n          background-image: @svg(\n            <svg viewBox=\"0 0 100 175\">\n              @M50(<path\n                stroke-width=\"@r(.5)\"\n                stroke=\"@p(#60569e, #e6437d, #ff7e5f)\"\n                d=\"M 0 0 L @r(100) @r(175)\"\n              />)\n            </svg>\n          );\n        }\n      </style>"
+  },
+  {
+    "id": "mosaico-anidado",
+    "name": "Mosaico Anidado",
+    "template": ":doodle {\n        @grid: @p(2, 3) / 12em;\n      }\n      background-image: @doodle(\n        @grid: @r4 / 100%;\n        background: @doodle(\n          @grid: @r4 / 100%;\n          background: @svg(\n            viewBox: 0 0 1 1;\n            path {\n              d: M 0 0 L 1 0 L 1 1;\n              fill: #60569e;\n            }\n          );\n        );\n      );"
+  },
+  {
+    "id": "barras-aleatorias",
+    "name": "Barras Aleatorias",
+    "template": ":doodle {\n        @grid: 1x35;\n        @size: 100vw 100vh;\n        gap: 1px;\n        display: flex;\n        flex-direction: column;\n        justify-content: center;\n      }\n      background: #60569e;\n      width: @rand(5%, 100%);\n      height: 1.5%;"
+  },
+  {
+    "id": "cuadrados-aleatorios",
+    "name": "Cuadrados Aleatorios",
+    "template": ":doodle {\n        @grid: 10 / 100vmax;\n      }\n      background: #60569e;\n      transform: scale(@r(.2, .9));"
+  }
+]

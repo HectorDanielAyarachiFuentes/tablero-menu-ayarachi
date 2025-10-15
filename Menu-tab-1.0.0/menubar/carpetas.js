@@ -24,7 +24,7 @@ export const FolderManager = {
         let node = tpl.content.firstElementChild.cloneNode(true);
         node.dataset.idx = index;
         node.querySelector('.title').textContent = tile.name;
-        node.style.animationDelay = `${index * 50}ms`;
+        node.style.setProperty('--animation-delay', `${index * 50}ms`);
 
         if (tile.type === 'folder') {
             node.classList.add('folder');
@@ -44,7 +44,11 @@ export const FolderManager = {
             linkNode.rel = 'noopener noreferrer';
             // Copy all attributes and classes from the div to the new <a>
             for (const attr of node.attributes) {
-                linkNode.setAttribute(attr.name, attr.value);
+                if (attr.name === 'style') {
+                    linkNode.style.cssText = attr.value;
+                } else {
+                    linkNode.setAttribute(attr.name, attr.value);
+                }
             }
             linkNode.innerHTML = node.innerHTML;
             node = linkNode;

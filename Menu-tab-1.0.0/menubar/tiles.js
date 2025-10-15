@@ -3,6 +3,7 @@ import { FolderManager } from './carpetas.js';
 import { renderFavoritesInSelect } from '../utils/search.js';
 import { showSaveStatus } from './ui.js';
 import { FileSystem } from './file-system.js';
+import { DOMPurify } from './lib.js';
 
 export let tiles = [];
 export let trash = [];
@@ -12,6 +13,7 @@ let dragTileSrcEl = null;
 let dragEditorRowSrcEl = null;
 let debounceTimer;
 
+const MAX_NOTE_LENGTH = 10000; // Límite de 10,000 caracteres para el contenido de las notas.
 export function setTiles(newTiles) {
     tiles = newTiles;
 }
@@ -51,8 +53,8 @@ export function initTiles() {
     $('#addTile').addEventListener('click', () => openModal());
     $('#modalSave').addEventListener('click', handleModalSave);
     $('#modalCancel').addEventListener('click', closeModal);
-    $('#closeModal')?.addEventListener('click', closeModal);
-    $('#modalEditIcon').addEventListener('click', () => $('#modalIconFile').click()); 
+    $('#closeModal')?.addEventListener('click', closeModal); 
+    $('#modalIconPreview').addEventListener('click', () => $('#modalIconFile').click());
     $('#addNote').addEventListener('click', () => openModal(null, 'note'));
     $('#modalIconFile').addEventListener('change', handleModalIconFileChange);
     $('#modalResetIcon').addEventListener('click', handleModalResetIcon);
@@ -80,13 +82,25 @@ export function initTiles() {
     });
 }
 
+/**
+ * Escapa caracteres HTML para prevenir XSS en campos de texto simple.
+ * @param {string} str La cadena a escapar.
+ * @returns {string} La cadena escapada.
+ */
+function escapeHTML(str) {
+    const p = document.createElement('p');
+    p.textContent = str;
+    return p.innerHTML;
+}
+
+
 export function saveAndRender() {
     // Guardamos en el almacenamiento del navegador y, si está activado, en el archivo local.
     const dataToSave = { tiles, trash };
     storageSet(dataToSave).then(async () => {
         const { autoSync } = await storageGet(['autoSync']);
         if (autoSync) {
-            await FileSystem.saveDataToFile({ ...dataToSave, tiles, trash });
+            await FileSystem.saveDataToFile(dataToSave);
         }
         showSaveStatus();
     });
@@ -110,10 +124,14 @@ export function renderTiles() {
     const currentTiles = FolderManager.getTilesForCurrentView(tiles);
     const displayableTiles = currentTiles.filter(t => t.type !== 'note'); // Filtrar notas
     let skeletonHTML = '';
+    tilesEl.innerHTML = ''; // Limpiar antes de añadir
+
     for (let i = 0; i < displayableTiles.length; i++) {
-        skeletonHTML += `<div class="tile-skeleton" style="animation-delay: ${i * 50}ms"></div>`;
+        const skeleton = document.createElement('div');
+        skeleton.className = 'tile-skeleton';
+        skeleton.style.setProperty('--animation-delay', `${i * 50}ms`);
+        tilesEl.appendChild(skeleton);
     }
-    tilesEl.innerHTML = skeletonHTML;
 
     displayableTiles.forEach((t, i) => {
         const node = FolderManager.renderTile(t, i, tpl, tiles);
@@ -125,7 +143,7 @@ export function renderTiles() {
     addNode.className = 'tile tile-add';
     addNode.href = '#';
     addNode.innerHTML = `<span>+</span><div>Añadir</div>`;
-    addNode.style.animationDelay = `${displayableTiles.length * 50}ms`;
+    addNode.style.setProperty('--animation-delay', `${displayableTiles.length * 50}ms`);
     addNode.addEventListener('click', (e) => {
         e.preventDefault();
         openModal();
@@ -243,8 +261,8 @@ function showContextMenu(button, index) {
     contextMenu.querySelector('[data-action="open-private"]').parentElement.hidden = isFolder;
 
     const rect = button.getBoundingClientRect();
-    contextMenu.style.left = `${rect.left}px`;
-    contextMenu.style.top = `${rect.bottom + 5}px`;
+    contextMenu.style.setProperty('--menu-left', `${rect.left}px`);
+    contextMenu.style.setProperty('--menu-top', `${rect.bottom + 5}px`);
     contextMenu.hidden = false;
     setTimeout(() => contextMenu.classList.add('is-open'), 10);
 }
@@ -372,6 +390,12 @@ export function renderTrash() {
     const trashListEl = $('#trash-list');
     if (!trashListEl) return;
 
+    // Habilitar o deshabilitar el botón de vaciar papelera
+    const emptyTrashBtn = $('#emptyTrashBtn');
+    if (emptyTrashBtn) {
+        emptyTrashBtn.disabled = trash.length === 0;
+    }
+
     trashListEl.innerHTML = '';
     trash.forEach((item, index) => {
         const trashItemEl = document.createElement('div');
@@ -448,7 +472,7 @@ export function renderNotes() {
         const noteEl = document.createElement('div');
         noteEl.className = 'note-item';
         noteEl.dataset.idx = note.originalIndex;
-        noteEl.style.animationDelay = `${i * 60}ms`;
+        noteEl.style.setProperty('--animation-delay', `${i * 60}ms`);
 
         noteEl.innerHTML = `
             <div class="note-item-header">
@@ -495,6 +519,7 @@ function openModal(index = null, forceType = null) {
     const modal = $('#modal');
     modal.dataset.editingIndex = index;
     
+    $('#overlay').setAttribute('aria-hidden', 'false');
     // When editing, we get the tile from the main `tiles` array using its absolute index.
     const tile = (index !== null) ? tiles[index] : null;
     const type = forceType || tile?.type || 'link';
@@ -503,7 +528,11 @@ function openModal(index = null, forceType = null) {
     $('#modalUrlGroup').hidden = true;
     $('#modalContentGroup').hidden = true;
     $('#modalName').placeholder = '';
-    $('.modal-preview').hidden = true;
+    $('#modalUrl').placeholder = ' '; // Required for :placeholder-shown selector to work
+    $('#modalContent').dataset.placeholder = ' '; // For floating label on contenteditable
+    $('#modalIconContainer').hidden = true;
+    $('#modalPreviewImg').hidden = true;
+    $('#modalIconPlaceholder').hidden = false;
 
     if (tile) {
         // Editing existing item
@@ -512,12 +541,13 @@ function openModal(index = null, forceType = null) {
 
         if (tile.type === 'link') {
             $('#modalUrlGroup').hidden = false;
-            $('.modal-preview').hidden = false;
+            $('#modalIconContainer').hidden = false;
             $('#modalUrl').value = tile.url;
             try {
-                $('#modalPreviewImg').src = tile.customIcon || `https://www.google.com/s2/favicons?sz=128&domain=${new URL(tile.url).hostname}`;
+                const iconSrc = tile.customIcon || `https://www.google.com/s2/favicons?sz=128&domain=${new URL(tile.url).hostname}`;
+                updateIconPreview(iconSrc, !!tile.customIcon);
             } catch (e) {
-                $('#modalPreviewImg').src = ''; // URL inválida, no mostrar ícono
+                updateIconPreview('', false); // URL inválida, no mostrar ícono
             }
         } else if (tile.type === 'note') {
             $('#modalContentGroup').hidden = false;
@@ -525,41 +555,41 @@ function openModal(index = null, forceType = null) {
         }
     } else {
         // Adding new item
-        $('#modalTitle').textContent = 'Añadir Nuevo Elemento';
         $('#modalName').value = '';
         $('#modalUrl').value = '';
         $('#modalContent').innerHTML = '';
-        $('#modalPreviewImg').src = '';
+        updateIconPreview('', false);
 
-        if (forceType === 'note') {
+        if (type === 'note') {
+            $('#modalTitle').textContent = 'Añadir Nueva Nota';
             $('#modalContentGroup').hidden = false;
         } else {
+            $('#modalTitle').textContent = 'Añadir Nuevo Acceso';
             $('#modalUrlGroup').hidden = false;
-            $('.modal-preview').hidden = false;
+            $('#modalIconContainer').hidden = false;
         }
 
         // Show type selector only when creating a new item from the main board
         // The type selector is no longer needed for adding from the main board.
     }
-
-    document.body.style.overflow = 'hidden';
     modal.hidden = false;
     setTimeout(() => modal.classList.add('is-open'), 10);
     $('#modalName').focus();
 }
 
-function closeModal() {
+export function closeModal() {
     const modal = $('#modal');
     modal.classList.remove('is-open');
     editing = null;
+    $('#overlay').setAttribute('aria-hidden', 'true');
     $('#modalIconFile').value = '';
-    document.body.style.overflow = '';
     setTimeout(() => { modal.hidden = true; }, 300);
 }
 
 function handleModalSave() {
-    const name = $('#modalName').value.trim();
-    if (!name) return;
+    const rawName = $('#modalName').value.trim();
+    if (!rawName) return;
+    const name = escapeHTML(rawName); // Sanitizar el nombre
 
     const originalItem = editing !== null ? tiles[editing] : null;
     
@@ -576,16 +606,43 @@ function handleModalSave() {
     if (editing !== null) {
         tiles[editing].name = name;
         if (tiles[editing].type === 'link') {
-            tiles[editing].url = $('#modalUrl').value.trim();
+            const url = $('#modalUrl').value.trim();
+            if (!url) {
+                alert('Por favor, introduce una URL.');
+                return;
+            }
+            try {
+                new URL(url); // Valida que la URL tenga un formato correcto.
+            } catch (e) {
+                alert('La URL introducida no es válida. Asegúrate de que el formato sea correcto (ej: https://www.google.com).');
+                return;
+            }
+            tiles[editing].url = url;
             if ($('#modalPreviewImg').src.startsWith('data:image')) {
                 tiles[editing].customIcon = $('#modalPreviewImg').src;
             }
         } else if (tiles[editing].type === 'note') {
-            tiles[editing].content = $('#modalContent').innerHTML;
+            const content = $('#modalContent').innerHTML;
+            if (content.length > MAX_NOTE_LENGTH) {
+                alert(`El contenido de la nota excede el límite de ${MAX_NOTE_LENGTH} caracteres.`);
+                return;
+            }
+            tiles[editing].content = DOMPurify.sanitize(content);
         }
     } else {
         // Creando un nuevo elemento
         if (type === 'link') {
+            const url = $('#modalUrl').value.trim();
+            if (!url) {
+                alert('Por favor, introduce una URL.');
+                return;
+            }
+            try {
+                new URL(url);
+            } catch (e) {
+                alert('La URL introducida no es válida. Asegúrate de que el formato sea correcto (ej: https://www.google.com).');
+                return;
+            }
             const newLink = {
                 type: 'link',
                 name,
@@ -600,8 +657,13 @@ function handleModalSave() {
             const currentFolder = FolderManager.getTilesForCurrentView(tiles);
             currentFolder.unshift(newLink);
         } else if (type === 'note') {
+            const content = $('#modalContent').innerHTML;
+            if (content.length > MAX_NOTE_LENGTH) {
+                alert(`El contenido de la nota excede el límite de ${MAX_NOTE_LENGTH} caracteres.`);
+                return;
+            }
             // Añadir la nueva nota siempre al inicio del listado principal de `tiles`
-            tiles.unshift({ type: 'note', name, content: $('#modalContent').innerHTML });
+            tiles.unshift({ type: 'note', name, content: DOMPurify.sanitize(content) });
         }
     }
     saveAndRender();
@@ -628,6 +690,12 @@ function handleUrlMetadata(e) {
             // Capitalizar el nombre principal del dominio (ej. 'google' de 'google.com')
             nameInput.value = domainParts[0].charAt(0).toUpperCase() + domainParts[0].slice(1);
         }
+
+        // Actualizar también la vista previa del icono
+        const previewImg = $('#modalPreviewImg');
+        if (!previewImg.dataset.isCustom) {
+             updateIconPreview(`https://www.google.com/s2/favicons?sz=128&domain=${hostname}`, false);
+        }
     } catch (error) {
         // La URL puede ser inválida mientras el usuario escribe, ignoramos el error.
     }
@@ -637,28 +705,45 @@ function handleModalIconFileChange(e) {
     const file = e.target.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = (event) => { $('#modalPreviewImg').src = event.target.result; };
+        reader.onload = (event) => {
+            updateIconPreview(event.target.result, true);
+        };
         reader.readAsDataURL(file);
     }
 }
 
 function handleModalResetIcon() {
     const index = $('#modal').dataset.editingIndex;
-    if (index === null) return;
-    const tile = tiles[index];
-    if (tile?.url) {
+    const url = $('#modalUrl').value;
+    
+    // Si estamos editando, usamos la URL del tile original si no hay una en el input
+    const tile = (index !== null && index !== 'null') ? tiles[index] : null;
+    const finalUrl = url || tile?.url;
+
+    if (finalUrl) {
         try {
-            $('#modalPreviewImg').src = `https://www.google.com/s2/favicons?sz=128&domain=${new URL(tile.url).hostname}`;
+            const newIconSrc = `https://www.google.com/s2/favicons?sz=128&domain=${new URL(finalUrl).hostname}`;
+            updateIconPreview(newIconSrc, false);
         } catch (e) {
-            $('#modalPreviewImg').src = ''; // URL inválida, no mostrar ícono
+            updateIconPreview('', false); // URL inválida, no mostrar ícono
         }
     }
-    tile.customIcon = null;
+    if (tile) tile.customIcon = null;
+}
+
+function updateIconPreview(src, isCustom) {
+    const previewImg = $('#modalPreviewImg');
+    previewImg.src = src;
+    previewImg.hidden = !src;
+    previewImg.dataset.isCustom = isCustom;
+    $('#modalIconPlaceholder').hidden = !!src;
+    $('#modalResetIcon').hidden = !isCustom;
 }
 
 function handleModalKeydown(e) {
     if ($('#modal').hidden) return;
-    if (e.key === 'Escape') closeModal();
+    // La tecla Escape ahora se gestiona en ui.js para cerrar cualquier panel abierto.
+    // if (e.key === 'Escape') closeModal();
     if (e.key === 'Enter' && e.ctrlKey) { handleModalSave(); }
     else if (e.key === 'Tab') {
         const focusable = $$('#modal button, #modal input').filter(el => !el.hidden && !el.disabled);

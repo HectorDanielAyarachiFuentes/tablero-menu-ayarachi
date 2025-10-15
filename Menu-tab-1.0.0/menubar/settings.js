@@ -1,8 +1,9 @@
-import { $, $$, storageGet } from './utils.js';
-import { saveAndSyncSetting } from './utils.js';
+import { $, $$, storageGet, storageSet } from './utils.js';
+import { saveAndSyncSetting } from './utils.js'; // storageSet is also used directly, so it's better to import it explicitly.
 import { updateActiveThemeButton, updateActiveGradientButton, showSaveStatus, updateDataTabUI, renderGreeting, updateSliderValueSpans, updateBgModeUI } from './ui.js';
+import { updateBackground } from './app.js';
 import { tiles, trash, setTiles, setTrash, saveAndRender, renderTiles, renderTrash, renderNotes } from './tiles.js';
-import { THEMES } from './themes.js';
+import { THEMES } from './themes-config.js';
 import { GRADIENTS, DEFAULT_GRADIENT_COLORS } from '../utils/gradients.js';
 import { FileSystem } from './file-system.js';
 import { STORAGE_KEYS } from './config.js';
@@ -17,7 +18,7 @@ export function initSettings(initialState) {
         const themeId = b.dataset.theme;
         const theme = THEMES[themeId];
         if (!theme) return;
-        b.style.backgroundImage = theme.background;
+        b.style.setProperty('--theme-bg-preview', theme.background);
         b.querySelector('.theme-name').textContent = theme.name;
         b.dataset.type = 'theme';
         b.addEventListener('click', handleThemeChange);
@@ -27,14 +28,14 @@ export function initSettings(initialState) {
 
     $('#bgFile').addEventListener('change', handleBgFileChange);
     $('#bgUrl').addEventListener('input', (e) => {
-        if (e.target.value.trim()) document.body.style.backgroundImage = `url('${e.target.value.trim()}')`;
+        if (e.target.value.trim()) document.body.style.setProperty('--bg-image', `url('${e.target.value.trim()}')`);
     });
     $('#bgUrl').addEventListener('change', async (e) => {
         const url = e.target.value.trim();
         if (!url) return;
-        const { bgDisplayMode } = await storageGet(['bgDisplayMode']);
-        const mode = bgDisplayMode || 'cover';
-        saveAndSyncSetting({ bgUrl: url, bgData: null, gradient: null, theme: null, bgDisplayMode: mode }, applyBackgroundSettings);
+        const { bgDisplayMode: currentMode } = await storageGet(['bgDisplayMode']);
+        const mode = currentMode || 'cover';
+        saveAndSyncSetting({ bgUrl: url, bgData: null, gradient: null, theme: null, doodle: 'none', bgDisplayMode: mode }, updateBackground);
     });
 
     $$('#bgModeSelector button').forEach(btn => {
@@ -60,10 +61,16 @@ export function initSettings(initialState) {
         });
     });
 
-    $('#manualSaveBtn').addEventListener('click', async () => {
-        await FileSystem.saveDataToFile({ tiles, trash });
-        showSaveStatus();
+    // Listener para el botón de re-seleccionar carpeta en el mensaje de error.
+    // Se añade al cuerpo de la configuración para usar delegación de eventos.
+    $('.settings-body').addEventListener('click', async (e) => {
+        if (e.target.id === 'reselectDirFromError') {
+            const handle = await FileSystem.getDirectoryHandle(true); // true para forzar la solicitud de permiso
+            updateDataTabUI();
+            if (handle) showSaveStatus(); // Oculta el mensaje de error si se obtiene el permiso
+        }
     });
+
     updateDataTabUI();
 
     // Add import/export buttons if not already added
@@ -103,7 +110,7 @@ export async function loadGradients(activeGradient) {
     GRADIENTS.forEach(g => {
         const btn = document.createElement('button');
         btn.className = 'gradient-btn';
-        btn.style.backgroundImage = g.gradient;
+        btn.style.setProperty('--gradient-bg-preview', g.gradient);
         btn.title = g.name.trim(); // Show name on hover
         btn.dataset.gradientId = g.id;
         btn.dataset.type = 'gradient';
@@ -185,7 +192,7 @@ export function applyBackgroundStyles(mode = 'cover') {
 
 function handleThemeChange(e) {
     const newTheme = e.target.dataset.theme;
-    saveAndSyncSetting({ theme: newTheme, bgUrl: null, bgData: null, gradient: null }, applyBackgroundSettings);
+    saveAndSyncSetting({ theme: newTheme, bgUrl: null, bgData: null, gradient: null, doodle: 'none' }, updateBackground);
 }
 
 function handleBgFileChange(e) {
@@ -200,11 +207,9 @@ function handleBgFileChange(e) {
     reader.onload = async (e) => {
         const { bgDisplayMode } = await storageGet(['bgDisplayMode']);
         const mode = bgDisplayMode || 'cover';
-        // Usamos saveAndSyncSetting para guardar y sincronizar
-        saveAndSyncSetting({ bgData: e.target.result, bgUrl: null, gradient: null, theme: null, bgDisplayMode: mode }, applyBackgroundSettings);
+        // Guardamos y sincronizamos, asegurándonos de desactivar el doodle
+        saveAndSyncSetting({ bgData: e.target.result, bgUrl: null, gradient: null, theme: null, doodle: 'none', bgDisplayMode: mode }, updateBackground);
         // Actualizamos la UI después de guardar
-        updateActiveThemeButton(null);
-        updateActiveGradientButton(null);
         $('#bgUrl').value = '';
     };
     reader.readAsDataURL(file);
@@ -212,61 +217,22 @@ function handleBgFileChange(e) {
 
 function handleBgModeChange(e) {
     const mode = e.currentTarget.dataset.mode;
-    saveAndSyncSetting({ bgDisplayMode: mode });
-    applyBackgroundStyles(mode);
+    saveAndSyncSetting({ bgDisplayMode: mode }, updateBackground);
     updateBgModeUI(true, mode);
-}
-function applyBackgroundSettings(settings) {
-    const { bgData, bgUrl, gradient, theme, bgDisplayMode } = settings;
-
-    // Liberar memoria del Object URL anterior si estamos cambiando a un fondo que no es un blob
-    if (appState.currentBackgroundValue && appState.currentBackgroundValue.startsWith('blob:')) {
-        URL.revokeObjectURL(appState.currentBackgroundValue);
-    }
-
-    document.body.classList.remove('theme-background');
-    document.body.style.backgroundImage = '';
-
-    const isCustomBg = !!(bgData || bgUrl);
-
-    if (bgData) {
-        appState.currentBackgroundValue = `url('${bgData}')`;
-    } else if (bgUrl) {
-        appState.currentBackgroundValue = `url('${bgUrl}')`;
-    }
-    else if (gradient) {
-        appState.currentGradient = gradient;
-        applyGradient(gradient);
-    } else if (theme) {
-        appState.currentTheme = theme;
-        applyTheme(theme);
-    }
-
-    if (isCustomBg) {
-        applyBackgroundStyles(bgDisplayMode);
-        document.body.style.backgroundImage = appState.currentBackgroundValue;
-    }
-
-    updateActiveThemeButton(theme);
-    updateActiveGradientButton(gradient);
-    updateBgModeUI(isCustomBg, bgDisplayMode);
 }
 
 function handleBackgroundChange(e) {
     const gradientId = e.target.dataset.gradientId;
-    saveAndSyncSetting({ gradient: gradientId, bgUrl: null, bgData: null, theme: null }, applyBackgroundSettings);
+    saveAndSyncSetting({ gradient: gradientId, bgUrl: null, bgData: null, theme: null, doodle: 'none' }, updateBackground);
 }
 
 function handleBackgroundHover(e) {
     const target = e.target;
-    document.body.setAttribute('data-theme-preview', 'true');
-    document.body.classList.remove('theme-background');
-
     if (target.dataset.type === 'gradient') {
         const gradientId = target.dataset.gradientId;
         const gradient = GRADIENTS.find(g => g.id === gradientId);
         if (!gradient) return;
-        applyGradient(gradientId); // Reutilizamos la función para aplicar colores y fondo
+        document.body.style.backgroundImage = gradient.gradient;
     }
 }
 
@@ -274,26 +240,41 @@ function handleThemeHover(e) {
     const themeId = e.target.dataset.theme;
     const theme = THEMES[themeId];
     if (!theme) return;
-
-    document.body.setAttribute('data-theme-preview', 'true');
-    for (const [key, value] of Object.entries(theme.cssVariables)) {
-        document.documentElement.style.setProperty(key, value);
-    }
     document.body.style.backgroundImage = theme.background;
 }
 
 function handleBackgroundLeave() {
-    document.body.removeAttribute('data-theme-preview');
-    // Re-apply the saved theme/gradient/background
+    // Restaura el fondo a la configuración guardada
+    let backgroundToRestore;
+
     if (appState.currentGradient) {
-        applyGradient(appState.currentGradient);
+        const gradient = GRADIENTS.find(g => g.id === appState.currentGradient);
+        backgroundToRestore = gradient ? gradient.gradient : 'none';
     } else if (appState.currentTheme) {
-        applyTheme(appState.currentTheme);
+        const theme = THEMES[appState.currentTheme];
+        backgroundToRestore = theme ? theme.background : 'none';
     } else {
-        // Si no hay tema ni gradiente, podría ser una URL, la reaplicamos
-        document.body.style.backgroundImage = appState.currentBackgroundValue;
-        // Reseteamos las variables CSS a las por defecto de los gradientes
-        applyGradient(GRADIENTS[0].id); // Aplica el primer gradiente como fallback de colores
+        backgroundToRestore = appState.currentBackgroundValue || 'none';
+    }
+
+    document.body.style.backgroundImage = backgroundToRestore;
+}
+
+/**
+ * Importa los marcadores del navegador y los añade al tablero.
+ */
+async function importBrowserBookmarks() {
+    if (!confirm('Esto añadirá todos tus marcadores al inicio de la lista de accesos. ¿Quieres continuar?')) {
+        return;
+    }
+    const { getBookmarks } = await import('./app.js');
+    const bookmarks = await getBookmarks();
+    if (bookmarks.length > 0) {
+        setTiles([...bookmarks, ...tiles]);
+        saveAndRender();
+        alert(`${bookmarks.length} marcadores han sido importados y añadidos a tu tablero.`);
+    } else {
+        alert('No se encontraron marcadores para importar.');
     }
 }
 

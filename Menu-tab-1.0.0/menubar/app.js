@@ -2,15 +2,30 @@ import { $, storageGet, storageSet } from './utils.js';
 import { STORAGE_KEYS } from './config.js';
 
 import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateSliderValueSpans, updateDataTabUI } from './ui.js';
-import { initTiles, renderTiles, tiles, setTiles, renderEditor, setTrash, renderTrash, renderNotes } from './tiles.js';
+import { initTiles, renderTiles, tiles, setTiles, renderEditor, renderNotes, setTrash, renderTrash } from './tiles.js';
 import { initSearch, renderFavoritesInSelect } from '../utils/search.js';
 import { initSettings, loadGradients, applyTheme, applyGradient, applyBackgroundStyles } from './settings.js';
 import { WeatherManager } from '../utils/tiempo.js';
+import { DOODLES, initDoodleSettings, updateDoodleSelectionUI } from './doodles.js';
 import { FileSystem } from './file-system.js';
 
 
 let currentTheme = 'paisaje'; // This can be moved if themes get more complex
 let currentBackgroundValue = '';
+
+/**
+ * Escucha mensajes desde otras partes de la extensión (como el service worker).
+ * Si recibe un mensaje de que se añadió un marcador, recarga los datos y
+ * vuelve a renderizar los accesos para mostrar el nuevo.
+ */
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+  if (message.type === 'BOOKMARK_ADDED') {
+    console.log('Mensaje de nuevo marcador recibido. Actualizando tablero...');
+    const { tiles: updatedTiles } = await storageGet(['tiles']);
+    setTiles(updatedTiles);
+    renderTiles();
+  }
+});
 
 async function init(){
   // 1. Carga inicial desde la caché local (muy rápido)
@@ -42,12 +57,28 @@ async function init(){
 }
 
 async function applySettings(settings, isUpdate = false) {
-  const initialTiles = settings.tiles || [
-    {type: 'link', name:'YouTube', url:'https://www.youtube.com/'},
-    {type: 'link', name:'Google', url:'https://www.google.com/', favorite: true},
-    {type: 'link', name:'Wikipedia', url:'https://es.wikipedia.org/'},
-    {type: 'link', name:'GitHub', url:'https://github.com/'}
-  ];
+  let initialTiles = settings.tiles;
+
+  // Si no hay accesos guardados, intenta importar desde los marcadores del navegador.
+  if (!initialTiles || initialTiles.length === 0) {
+    console.log('No hay accesos guardados. Importando desde los marcadores del navegador...');
+    const bookmarks = await getBookmarks();
+    if (bookmarks.length > 0) {
+      initialTiles = bookmarks;
+      console.log(`${bookmarks.length} marcadores importados como accesos.`);
+      // Guardamos los marcadores importados para que no se vuelvan a importar la próxima vez.
+      await storageSet({ tiles: initialTiles });
+    } else {
+      // Si no se encuentran marcadores, usar la lista por defecto.
+      initialTiles = [
+        {type: 'link', name:'YouTube', url:'https://www.youtube.com/'},
+        {type: 'link', name:'Google', url:'https://www.google.com/', favorite: true},
+        {type: 'link', name:'Wikipedia', url:'https://es.wikipedia.org/'},
+        {type: 'link', name:'GitHub', url:'https://github.com/'}
+      ];
+      console.log('No se encontraron marcadores, usando la lista de accesos por defecto.');
+    }
+  }
 
   const processedTiles = initialTiles.map(t => {
     if (!t.type && t.url) return { ...t, type: 'link' };
@@ -65,21 +96,7 @@ async function applySettings(settings, isUpdate = false) {
   renderGreeting(settings.userName);
   renderFavoritesInSelect();
 
-  if (settings.bgData) {
-    currentBackgroundValue = `url('${settings.bgData}')`;
-    applyBackgroundStyles(settings.bgDisplayMode);
-    document.body.style.backgroundImage = currentBackgroundValue;
-  } else if (settings.bgUrl) {
-    currentBackgroundValue = `url('${settings.bgUrl}')`;
-    applyBackgroundStyles(settings.bgDisplayMode);
-    document.body.style.backgroundImage = currentBackgroundValue;
-  } else if (settings.gradient) {
-    applyGradient(settings.gradient);
-    updateActiveGradientButton(settings.gradient);
-  } else {
-    currentTheme = settings.theme || 'paisaje';
-    applyTheme(currentTheme);
-  }
+  await updateBackground();
 
   const panelOpacity = settings.panelOpacity ?? 0.05;
   const panelBlur = settings.panelBlur ?? 6;
@@ -108,12 +125,93 @@ async function applySettings(settings, isUpdate = false) {
       autoSync: settings.autoSync,
       bgDisplayMode: settings.bgDisplayMode,
       isCustomBg: !!(settings.bgData || settings.bgUrl)
-    });
+    }); 
+    await initDoodleSettings(settings.doodle || 'none');
 
     WeatherManager.init();
     setInterval(WeatherManager.fetchAndRender, 1800000); // Actualiza el clima cada 30 minutos
     loadNonCriticalCSS();
   }
+}
+
+/**
+ * Obtiene los marcadores del navegador y los convierte al formato de 'tile'.
+ * @returns {Promise<Array<object>>} Una promesa que resuelve a un array de tiles.
+ */
+export async function getBookmarks() {
+  // Comprobamos que la API de marcadores esté disponible.
+  if (!chrome.bookmarks) {
+    return [];
+  }
+
+  return new Promise(resolve => {
+    chrome.bookmarks.getTree(bookmarkTreeNodes => {
+      const tiles = [];
+      // Función recursiva para aplanar el árbol de marcadores.
+      function flatten(nodes) {
+        for (const node of nodes) {
+          // Si es un marcador con URL (no una carpeta), lo añadimos.
+          if (node.url) {
+            tiles.push({ type: 'link', name: node.title || new URL(node.url).hostname, url: node.url, favorite: false });
+          }
+          // Si tiene hijos (es una carpeta), seguimos buscando dentro.
+          if (node.children) {
+            flatten(node.children);
+          }
+        }
+      }
+      flatten(bookmarkTreeNodes);
+      resolve(tiles);
+    });
+  });
+}
+
+/**
+ * Función centralizada para actualizar el fondo de la página.
+ * Decide qué fondo mostrar según la prioridad: Doodle > Imagen > Degradado > Tema.
+ */
+export async function updateBackground() {
+  const settings = await storageGet(['doodle', 'bgData', 'bgUrl', 'gradient', 'theme', 'bgDisplayMode']);
+  const doodleId = settings.doodle || 'none';
+  const doodle = DOODLES.find(d => d.id === doodleId);
+
+  const doodleBgContainer = $('#doodle-background');
+  const doodlePreviewContainer = $('#doodle-preview');
+
+  // Limpiar siempre el contenedor del doodle antes de decidir
+  doodleBgContainer.innerHTML = '';
+
+  // Prioridad 1: Doodle activo
+  if (doodle && doodle.id !== 'none' && doodle.template) {
+    $('.wrap').style.backgroundColor = 'transparent';
+    document.body.style.backgroundImage = 'none'; // Quitar cualquier otra imagen de fondo
+
+    const backgroundDoodle = document.createElement('css-doodle');
+    backgroundDoodle.innerHTML = doodle.template;
+    doodleBgContainer.appendChild(backgroundDoodle);
+    if (typeof backgroundDoodle.update === 'function') {
+      setTimeout(() => backgroundDoodle.update(), 0);
+    }
+  } else {
+    // No hay doodle, aplicar fondos normales (Imagen, Degradado o Tema)
+    $('.wrap').style.backgroundColor = '';
+    if (settings.bgData) {
+      applyBackgroundStyles(settings.bgDisplayMode);
+      document.body.style.backgroundImage = `url('${settings.bgData}')`;
+    } else if (settings.bgUrl) {
+      applyBackgroundStyles(settings.bgDisplayMode);
+      document.body.style.backgroundImage = `url('${settings.bgUrl}')`;
+    } else if (settings.gradient) {
+      applyGradient(settings.gradient);
+    } else {
+      applyTheme(settings.theme || 'paisaje');
+    }
+  }
+
+  // Actualizar siempre la UI de la configuración
+  updateActiveGradientButton(settings.gradient);
+  updateActiveThemeButton(settings.theme);
+  updateDoodleSelectionUI(doodleId);
 }
 
 init();

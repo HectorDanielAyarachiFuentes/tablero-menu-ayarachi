@@ -10,8 +10,9 @@ export const STORAGE_KEYS = [
   'panelOpacity',
   'panelBlur',
   'randomBg',
-  'trash',
-  'autoSync'
+  'trash', // Re-added trash
+  'autoSync',
+  'doodle'
 ];
 
 export const API_URLS = {

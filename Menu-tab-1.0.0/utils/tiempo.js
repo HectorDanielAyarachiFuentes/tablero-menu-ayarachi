@@ -1,5 +1,5 @@
 import { $, storageGet, storageSet, saveAndSyncSetting } from '../menubar/utils.js';
-import { showSaveStatus } from '../menubar/ui.js';
+import { showSettingError } from '../menubar/ui.js';
 import { API_URLS } from '../menubar/config.js';
 
 export const WeatherManager = {
@@ -32,8 +32,23 @@ export const WeatherManager = {
     },
     handleCityChange(e) {
         const city = e.target.value.trim();
-        saveAndSyncSetting({ weatherCity: city });
-        WeatherManager.fetchAndRender();
+        // Si el campo está vacío, lo guardamos y dejamos que la geolocalización actúe.
+        if (!city) {
+            saveAndSyncSetting({ weatherCity: '' });
+            WeatherManager.fetchAndRender();
+            return;
+        }
+        // Validamos que la ciudad tenga al menos 2 caracteres y un formato válido.
+        if (city.length < 2 || !/^[a-zA-ZáéíóúñÑ\s.,'-]+$/.test(city)) {
+            showSettingError('Nombre de ciudad inválido');
+            return;
+        }
+        // Guardamos la configuración y luego intentamos obtener el clima.
+        saveAndSyncSetting({ weatherCity: city }).then(() => {
+            WeatherManager.fetchAndRender().catch(err => {
+                if (err.message === 'Ciudad no encontrada.') showSettingError('Ciudad no encontrada.');
+            });
+        });
     },
     handleWidgetClick(e) {
         if (e.target.closest('.weather-summary')) {

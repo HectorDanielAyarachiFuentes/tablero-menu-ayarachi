@@ -1,6 +1,6 @@
 import { $, $$, saveAndSyncSetting, storageGet } from './utils.js';
 import { FolderManager } from './carpetas.js';
-import { renderTiles, trash, saveAndRender } from './tiles.js';
+import { renderTiles, saveAndRender, tiles, trash, closeModal } from './tiles.js';
 import { FileSystem } from './file-system.js';
 
 export function initUI() {
@@ -15,6 +15,7 @@ export function initUI() {
     document.addEventListener('click', (e) => {
         if (e.target === $('#overlay')) {
             toggleSettings(false);
+            closeModal();
             toggleNotesPanel(false);
         }
     });
@@ -57,6 +58,11 @@ export function initUI() {
     });
     $('#panelBlur').addEventListener('change', (e) => {
         saveAndSyncSetting({ panelBlur: parseInt(e.target.value, 10) });
+    });
+
+    $('#manualSaveBtn').addEventListener('click', async () => {
+        await FileSystem.saveDataToFile({ tiles, trash });
+        showSaveStatus();
     });
 
     $('#emptyTrashBtn').addEventListener('click', () => {
@@ -118,6 +124,7 @@ export function toggleSettings(show) {
     const isHidden = show === undefined ? settings.getAttribute('aria-hidden') === 'false' : !show;
     settings.setAttribute('aria-hidden', isHidden);
     $('#overlay').setAttribute('aria-hidden', isHidden && $('#notes-panel').getAttribute('aria-hidden') === 'true');
+    document.body.classList.toggle('no-scroll', !isHidden);
     $('#openSettings').classList.toggle('active', !isHidden);
     if (!isHidden) toggleNotesPanel(false); // Close notes if opening settings
     updateMainBlur();
@@ -128,12 +135,15 @@ export function toggleNotesPanel(show) {
     const isHidden = show === undefined ? notesPanel.getAttribute('aria-hidden') === 'false' : !show;
     notesPanel.setAttribute('aria-hidden', isHidden);
     $('#overlay').setAttribute('aria-hidden', isHidden && $('#settings').getAttribute('aria-hidden') === 'true');
+    document.body.classList.toggle('no-scroll', !isHidden);
     $('#openNotes').classList.toggle('active', !isHidden);
     if (!isHidden) toggleSettings(false); // Close settings if opening notes
     updateMainBlur();
 }
 
-function updateMainBlur() { $('.main').style.filter = ($('#settings[aria-hidden="false"]') || $('#notes-panel[aria-hidden="false"]')) ? 'blur(4px)' : 'none'; }
+function updateMainBlur() {
+    $('.main').classList.toggle('blurred', !!($('#settings[aria-hidden="false"]') || $('#notes-panel[aria-hidden="false"]')));
+}
 
 export function showSaveStatus() {
     const saveStatus = $('#saveStatus');
@@ -141,10 +151,51 @@ export function showSaveStatus() {
     
     if (saveStatus.timeout) clearTimeout(saveStatus.timeout);
     saveStatus.textContent = 'Guardado!';
-    saveStatus.style.opacity = '1';
-    saveStatus.timeout = setTimeout(() => { saveStatus.style.opacity = '0'; }, 2000);
+    saveStatus.classList.remove('error');
+    saveStatus.classList.add('visible');
+    saveStatus.timeout = setTimeout(() => {
+        saveStatus.classList.remove('visible');
+    }, 2000);
 }
 
+/**
+ * Muestra un mensaje de error temporal en el panel de configuración.
+ * @param {string} message El mensaje de error a mostrar.
+ */
+export function showSettingError(message) {
+    const saveStatus = $('#saveStatus');
+    if (!saveStatus) return;
+
+    if (saveStatus.timeout) clearTimeout(saveStatus.timeout);
+    saveStatus.textContent = message;
+    saveStatus.classList.add('error');
+    saveStatus.classList.add('visible');
+    saveStatus.timeout = setTimeout(() => {
+        saveStatus.classList.remove('visible');
+        // La clase de error se limpia la próxima vez que se muestre un estado normal.
+    }, 3000);
+}
+
+/**
+ * Muestra un mensaje de error persistente relacionado con operaciones de archivo.
+ * @param {string} message - El mensaje de error a mostrar.
+ * @param {boolean} isPermissionError - Si es true, añade un botón para re-seleccionar el directorio.
+ */
+export function showFileError(message, isPermissionError = false) {
+    const saveStatus = $('#saveStatus');
+    if (!saveStatus) return;
+
+    if (saveStatus.timeout) clearTimeout(saveStatus.timeout);
+    
+    let finalMessage = message;
+    if (isPermissionError) {
+        finalMessage += ` <button id="reselectDirFromError" class="btn-link" style="text-decoration: underline; background: none; border: none; color: inherit; cursor: pointer; padding: 0; font-size: inherit;">Re-seleccionar carpeta</button>`;
+    }
+
+    saveStatus.innerHTML = finalMessage;
+    saveStatus.classList.add('error');
+    saveStatus.style.opacity = '1';
+}
 export async function updateDataTabUI() {
     const handle = await FileSystem.getDirectoryHandle();
     const { autoSync } = await storageGet(['autoSync']);

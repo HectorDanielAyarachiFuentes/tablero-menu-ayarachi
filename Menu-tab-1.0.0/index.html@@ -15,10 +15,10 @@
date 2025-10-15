@@ -8,14 +8,13 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="loading">
-  <script src="menubar/pre-loader.js" type="module"></script>
   <script src="menubar/bg-loader.js" type="module"></script>
+  <div id="doodle-background"></div>
   <div class="wrap">
     <header class="header">
       <div class="brand-container">
-        <button id="backBtn" class="back-btn" hidden aria-label="Volver a la carpeta anterior">‹</button>
-        <div id="greeting" class="brand"><span class="placeholder"></span></div>
-        <div id="clock" class="clock-header"><span class="placeholder"></span></div>
+        <button id="backBtn" class="back-btn" hidden aria-label="Volver a la carpeta anterior">‹</button>        <div id="greeting" class="brand live-info"><span class="placeholder"></span></div>
+        <div id="clock" class="clock-header live-info"><span class="placeholder"></span></div>
       </div>
       <div class="controls">
         <button id="openNotes" title="Notas">
@@ -30,7 +29,7 @@
     <main id="main-content" class="main">
       <section class="top-content">
         <!-- El saludo y la hora se movieron a la cabecera -->
-        <div id="date" class="date"><span class="placeholder"></span></div>
+        <div id="date" class="date live-info"><span class="placeholder"></span></div>
       </section>
 
       <section class="search-section">
@@ -62,11 +61,8 @@
     <footer class="footer">Ayarachi © 2025</footer>
   </div>
 
-  <!-- El contenedor del doodle se mueve aquí, fuera de .wrap, para que pueda actuar como un fondo independiente. -->
-  <div id="doodle-background"></div>
-
   <!-- Weather Widget - Posicionado de forma fija -->
-  <div id="weather" class="weather-widget-fixed">
+  <div id="weather" class="weather-widget-fixed live-info">
     <div class="weather-summary">
       <div class="weather-details"><span class="placeholder"></span></div>
     </div>
@@ -129,7 +125,7 @@
         <span>Datos</span>
       </button>
       <button class="tab-btn" data-tab="papelera">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
         <span>Papelera</span>
       </button>
     </div>
@@ -245,10 +241,8 @@
         <div class="field local-storage-field">
           <label>Almacenamiento Local de Datos</label>
           <p class="field-description">Guarda tus datos de forma segura en un archivo en tu propia computadora. Esto te da control total, privacidad y acceso sin conexión. Se recomienda elegir una carpeta en "Mis Documentos".</p>
-          <div class="button-group vertical">
-            <button id="selectDirBtn" class="btn primary">Elegir Carpeta de Datos</button>
-          </div>
-          <div id="dirInfo" class="dir-path info" hidden>Para reactivar la sincronización, por favor, selecciona la carpeta de nuevo. El navegador requiere este paso por seguridad.</div>
+          <button id="selectDirBtn" class="btn primary full-width">Elegir Carpeta de Datos</button>
+          <div id="dirInfo" class="dir-path info" hidden>Para reactivar la sincronización, por favor selecciona la carpeta de nuevo. El navegador requiere este paso por seguridad.</div>
           <div id="dirPath" class="dir-path" hidden></div>
         </div>
         <div class="field field-toggle">
@@ -264,15 +258,13 @@
         </div>
       </div>
       <!-- Tab: Papelera -->
-      <div class="tab-pane tab-pane-full-height" id="tab-papelera">
+      <div class="tab-pane" id="tab-papelera">
         <div class="field">
           <div class="field-header">
             <label>Accesos Eliminados</label>
-            <button id="emptyTrashBtn" class="btn btn-danger" title="Vaciar toda la papelera" disabled>Vaciar Papelera</button>
+            <button id="emptyTrashBtn" class="btn btn-danger" title="Vaciar toda la papelera">Vaciar Papelera</button>
           </div>
-          <div class="scrollable-content">
-            <div id="trash-list" class="trash-list"></div>
-          </div>
+          <div id="trash-list" class="trash-list"></div>
         </div>
       </div>
     </div>
@@ -293,42 +285,35 @@
         <button id="closeModal" class="modal-close" aria-label="Cerrar modal">✕</button>
       </header>
       <div class="modal-body">
-        <div id="modalIconContainer" class="modal-icon-container">
-          <div id="modalIconPreview" class="modal-icon-preview" role="button" tabindex="0" aria-label="Cambiar imagen del ícono">
-            <img id="modalPreviewImg" src="" alt="Vista previa del ícono" hidden>
-            <div id="modalIconPlaceholder" class="modal-icon-placeholder">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-              <span>Subir icono</span>
-            </div>
+        <div class="modal-preview">
+          <img id="modalPreviewImg" src="" alt="Vista previa del ícono">
+          <div class="preview-actions">
+            <button id="modalResetIcon" aria-label="Restablecer ícono al predeterminado">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            </button>
+            <button id="modalEditIcon" aria-label="Cambiar imagen del ícono">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </button>
           </div>
-          <button id="modalResetIcon" class="modal-icon-reset" aria-label="Restablecer ícono" hidden>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-          </button>
+          <input type="file" id="modalIconFile" accept="image/*" hidden>
         </div>
-        <input type="file" id="modalIconFile" accept="image/*" hidden>
-        <div class="form-group with-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-          <input id="modalName" type="text" required placeholder=" " />
-          <label for="modalName">Nombre</label>
+        <label>Nombre</label>
+        <input id="modalName" />
+        <div id="modalUrlGroup">
+          <label id="modalUrlLabel">Dirección</label>
+          <input id="modalUrl" />
         </div>
-        <div id="modalUrlGroup" class="form-group with-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg>
-          <input id="modalUrl" type="url" required placeholder=" " />
-          <label for="modalUrl">Dirección (URL)</label>
-        </div>
-        <div id="modalContentGroup" class="form-group" hidden>
-          <div class="rich-editor-container">
-            <div class="rich-editor-toolbar">
-              <button data-command="bold" title="Negrita (Ctrl+B)"><b>B</b></button>
-              <button data-command="italic" title="Cursiva (Ctrl+I)"><i>I</i></button>
-              <button data-command="underline" title="Subrayado (Ctrl+U)"><u>U</u></button>
-              <button data-command="insertUnorderedList" title="Lista con viñetas">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-              </button>
-            </div>
-            <div id="modalContent" class="rich-text-editor" contenteditable="true" data-placeholder=" "></div>
+        <div id="modalContentGroup" hidden>
+          <label>Contenido de la Nota</label>
+          <div class="rich-editor-toolbar">
+            <button data-command="bold" title="Negrita (Ctrl+B)"><b>B</b></button>
+            <button data-command="italic" title="Cursiva (Ctrl+I)"><i>I</i></button>
+            <button data-command="underline" title="Subrayado (Ctrl+U)"><u>U</u></button>
+            <button data-command="insertUnorderedList" title="Lista con viñetas">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            </button>
           </div>
-          <label for="modalContent">Contenido de la Nota</label>
+          <div id="modalContent" class="rich-text-editor" contenteditable="true"></div>
         </div>
       </div>
       <footer class="modal-footer">
@@ -363,7 +348,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2"></path><path d="M12 21v2"></path><path d="m4.22 4.22 1.42 1.42"></path><path d="m18.36 18.36 1.42 1.42"></path><path d="M1 12h2"></path><path d="M21 12h2"></path><path d="m4.22 19.78 1.42-1.42"></path><path d="m18.36 5.64 1.42-1.42"></path></svg>
         <span>Abrir en ventana privada</span>
       </button></li>
-      <li class="separator"></li>
+      <hr>
       <li><button data-action="edit">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
         <span>Editar</span>

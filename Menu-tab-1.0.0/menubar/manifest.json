@@ -13,10 +13,14 @@
   },
   "permissions": [
     "storage",
-    "geolocation"
+    "geolocation",
+    "bookmarks"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data: https://* blob:;"
+  },
   "web_accessible_resources": [{
-    "resources": ["menubar/lib/idb-keyval.js"],
+    "resources": ["menubar/file-worker.js"],
     "matches": ["<all_urls>"]
   }]
 }

@@ -218,12 +218,26 @@
       <!-- Tab: Paneles -->
       <div class="tab-pane" id="tab-paneles">
         <div class="field">
+          <label for="panelColor">Color de fondo de paneles</label>
+          <div class="input-group-color">
+            <input type="color" id="panelColor" value="#0e193a">
+            <input type="text" id="panelColorValue" placeholder="#0e193a">
+          </div>
+        </div>
+        <div class="field">
           <label for="panelOpacity">Opacidad de paneles <span id="opacityValue">5%</span></label>
           <input type="range" id="panelOpacity" min="0" max="0.5" step="0.01" value="0.05">
         </div>
         <div class="field">
           <label for="panelBlur">Desenfoque de paneles <span id="blurValue">6px</span></label>
           <input type="range" id="panelBlur" min="0" max="20" step="1" value="6">
+        </div>
+        <div class="field">
+          <label for="panelRadius">Radio de borde de paneles <span id="radiusValue">12px</span></label>
+          <input type="range" id="panelRadius" min="0" max="30" step="1" value="12">
+        </div>
+        <div class="field">
+          <button id="resetPanelsBtn" class="btn full-width">Restablecer Estilos de Paneles</button>
         </div>
       </div>
       <!-- Tab: Datos -->

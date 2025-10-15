@@ -1,6 +1,6 @@
 import { $, $$, saveAndSyncSetting, storageGet } from './utils.js';
 import { FolderManager } from './carpetas.js';
-import { renderTiles, saveAndRender, tiles, trash, closeModal } from './tiles.js';
+import { renderTiles, saveAndRender, tiles, trash, closeModal, setTiles, setTrash } from './tiles.js';
 import { FileSystem } from './file-system.js';
 
 export function initUI() {
@@ -50,6 +50,24 @@ export function initUI() {
         saveAndSyncSetting({ userName: name });
     });
 
+    // --- Lógica para Paneles ---
+    const panelColorInput = $('#panelColor');
+    const panelColorValue = $('#panelColorValue');
+
+    panelColorInput.addEventListener('input', (e) => {
+        const color = e.target.value;
+        panelColorValue.value = color;
+        document.documentElement.style.setProperty('--panel-bg', color);
+        updatePanelRgb(color);
+    });
+    panelColorInput.addEventListener('change', (e) => saveAndSyncSetting({ panelBg: e.target.value }));
+
+    panelColorValue.addEventListener('change', (e) => {
+        const color = e.target.value;
+        panelColorInput.value = color;
+        panelColorInput.dispatchEvent(new Event('input'));
+        panelColorInput.dispatchEvent(new Event('change'));
+    });
     $('#panelOpacity').addEventListener('input', (e) => {
         document.documentElement.style.setProperty('--panel-opacity', e.target.value);
         updateSliderValueSpans();
@@ -66,6 +84,14 @@ export function initUI() {
         saveAndSyncSetting({ panelBlur: parseInt(e.target.value, 10) });
     });
 
+    $('#panelRadius').addEventListener('input', (e) => {
+        document.documentElement.style.setProperty('--panel-radius', `${e.target.value}px`);
+        updateSliderValueSpans();
+    });
+    $('#panelRadius').addEventListener('change', (e) => {
+        saveAndSyncSetting({ panelRadius: parseInt(e.target.value, 10) });
+    });
+
     $('#manualSaveBtn').addEventListener('click', async () => {
         await FileSystem.saveDataToFile({ tiles, trash });
         showSaveStatus();
@@ -77,6 +103,10 @@ export function initUI() {
             trash.length = 0; // Vacía el array
             saveAndRender();
         }
+    });
+
+    $('#resetPanelsBtn').addEventListener('click', async () => {
+        await resetPanelSettings();
     });
 }
 
@@ -102,6 +132,7 @@ export function updateClock() {
 export function updateSliderValueSpans() {
     $('#opacityValue').textContent = `${Math.round($('#panelOpacity').value * 100)}%`;
     $('#blurValue').textContent = `${$('#panelBlur').value}px`;
+    $('#radiusValue').textContent = `${$('#panelRadius').value}px`;
 }
 
 export function updateActiveThemeButton(theme) {
@@ -221,4 +252,53 @@ export async function updateDataTabUI() {
         $('#autoSyncToggle').checked = false;
         $('#manualSaveBtn').hidden = true;
     }
+}
+
+/**
+ * Convierte un color hexadecimal a formato RGB y lo establece como una variable CSS.
+ * @param {string} hex - El color en formato hexadecimal (ej. #RRGGBB).
+ */
+export function updatePanelRgb(hex) {
+    if (!hex || !hex.startsWith('#')) return;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+        document.documentElement.style.setProperty('--panel-bg-rgb', `${r}, ${g}, ${b}`);
+    }
+}
+
+/**
+ * Restablece la configuración de los paneles a sus valores predeterminados.
+ */
+async function resetPanelSettings() {
+    const defaults = {
+        panelBg: '#0e193a',
+        panelOpacity: 0.05,
+        panelBlur: 6,
+        panelRadius: 12
+    };
+
+    // Eliminar las configuraciones personalizadas del storage
+    await saveAndSyncSetting({
+        panelBg: null,
+        panelOpacity: null,
+        panelBlur: null,
+        panelRadius: null
+    });
+
+    // Aplicar valores por defecto a la UI y al DOM
+    $('#panelColor').value = defaults.panelBg;
+    $('#panelColorValue').value = defaults.panelBg;
+    $('#panelOpacity').value = defaults.panelOpacity;
+    $('#panelBlur').value = defaults.panelBlur;
+    $('#panelRadius').value = defaults.panelRadius;
+
+    document.documentElement.style.setProperty('--panel-bg', defaults.panelBg);
+    document.documentElement.style.setProperty('--panel-opacity', defaults.panelOpacity);
+    document.documentElement.style.setProperty('--panel-blur', `${defaults.panelBlur}px`);
+    document.documentElement.style.setProperty('--panel-radius', `${defaults.panelRadius}px`);
+    updatePanelRgb(defaults.panelBg);
+    updateSliderValueSpans();
+    showSaveStatus();
 }

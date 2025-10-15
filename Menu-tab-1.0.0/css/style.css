@@ -7,6 +7,7 @@
 --accent-color: #8e44ad;
 --button-bg: rgba(255, 255, 255, 0.05);
 --button-hover-bg: rgba(255, 255, 255, 0.1);
+--panel-radius: 12px;
 
 --panel-opacity: 0.05;
 --panel-blur: 6px;
@@ -86,8 +87,7 @@ body.loading .tiles-section {
 }
 .forecast-day{font-weight:600}
 .forecast-temp-range{font-size:0.9em}
-
-.search-card{display:flex;align-items:stretch;width:min(980px,96%);background:rgba(var(--panel-bg-rgb), var(--panel-opacity));border-radius:12px;backdrop-filter:blur(var(--panel-blur)); -webkit-backdrop-filter: blur(var(--panel-blur)); border: 1px solid rgba(255, 255, 255, 0.1);}
+.search-card{display:flex;align-items:stretch;width:min(980px,96%);background:rgba(var(--panel-bg-rgb), var(--panel-opacity));border-radius:var(--panel-radius);backdrop-filter:blur(var(--panel-blur)); -webkit-backdrop-filter: blur(var(--panel-blur)); border: 1px solid rgba(255, 255, 255, 0.1);}
 .search-section { transition: opacity 0.5s ease-out, transform 0.5s ease-out; transition-delay: 0.2s; }
 .tiles-section { width: 100%; transition: opacity 0.5s ease-out, transform 0.5s ease-out; transition-delay: 0.3s; }
 .search-card{border:1px solid transparent;transition:border-color .3s ease, background-color .3s ease;}
@@ -96,7 +96,7 @@ body.loading .tiles-section {
 .search-card input::placeholder { color: rgba(255, 255, 255, 0.6); }
 .search-card select option{color:black;background:white} /* This rule seems unused now, but I'll leave it. */
 .search-card input{flex:1;font-size:16px}
-.search-card button{display:flex;align-items:center;gap:8px;background:#16a085;border:0;padding:12px 16px;border-radius:0 10px 10px 0;color:white;cursor:pointer; transition: background-color .2s;}
+.search-card button{display:flex;align-items:center;gap:8px;background:#16a085;border:0;padding:12px 16px;border-radius:0 var(--panel-radius) var(--panel-radius) 0;color:white;cursor:pointer; transition: background-color .2s;}
 .search-card button:hover { background-color: #1abc9c; }
 .search-card button svg{width:16px;height:16px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;width:100%;max-width:1100px;margin:6px auto 0;perspective:800px;}
@@ -104,7 +104,7 @@ body.loading .tiles-section {
   position:relative;display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:rgba(var(--panel-bg-rgb), var(--panel-opacity)); backdrop-filter: blur(var(--panel-blur)); -webkit-backdrop-filter: blur(var(--panel-blur)); cursor:grab;transition:transform .18s, box-shadow .18s, background-color .3s ease;text-decoration:none;color:var(--text-color);opacity:0;animation:fadeInUp .4s ease-out forwards;
   will-change: transform, box-shadow;
   /* Usamos una variable para el delay de la animación para cumplir con la CSP */
-  animation-delay: var(--animation-delay, 0s); 
+  animation-delay: var(--animation-delay, 0s); border-radius: var(--panel-radius);
 } a.tile { text-decoration: none; color: var(--text-color); }
 .tile:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 18px 40px rgba(0,0,0,0.5)}
 .thumb{width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,0.03);object-fit:contain;padding:4px}
@@ -124,7 +124,7 @@ body.loading .tiles-section {
 .tile-skeleton {
   background-color: rgba(var(--panel-bg-rgb), var(--panel-opacity));
   backdrop-filter: blur(var(--panel-blur));
-  border-radius: 12px;
+  border-radius: var(--panel-radius);
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   animation-delay: var(--animation-delay, 0s);
 }
@@ -147,7 +147,7 @@ body.loading .tiles-section {
 
 .settings{
   position:fixed;right:20px;top:20px;width:440px;background:var(--panel-bg);border: 1px solid rgba(255,255,255,0.1);padding:20px;border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,0.6);z-index:2000;transform:translateX(calc(100% + 40px));visibility:hidden;
-  transition:transform .4s cubic-bezier(.25,.8,.25,1), visibility .4s, width .3s;
+  transition:transform .4s cubic-bezier(.25,.8,.25,1), visibility .4s, width .3s, border-radius .3s;
   will-change: transform;  
   background: rgba(var(--panel-bg-rgb), var(--panel-opacity));
   backdrop-filter: blur(var(--panel-blur));
@@ -416,6 +416,20 @@ input:checked + .slider:before {
     opacity: 0.8;
     margin-top: 8px;
 }
+.input-group-color {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.input-group-color input[type="color"] {
+    -webkit-appearance: none;
+    padding: 0;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+}
 /* Estilos para la pestaña de la papelera */
 #tab-papelera .trash-list { display: flex; flex-direction: column; gap: 8px; }
 #tab-papelera .field-header {
@@ -581,7 +595,7 @@ body.theme-background {
   background: rgba(var(--panel-bg-rgb), 0.7);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--panel-radius);
   border-radius: 10px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
   padding: 6px;
@@ -782,7 +796,7 @@ body.theme-background {
 .modal-card {
   width: min(480px, 95vw);
   background: var(--panel-bg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--panel-radius);
   border-radius: 16px;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
   display: flex;
@@ -890,7 +904,7 @@ body.theme-background {
     background: rgba(var(--panel-bg-rgb), var(--panel-opacity));
     backdrop-filter: blur(var(--panel-blur));
     -webkit-backdrop-filter: blur(var(--panel-blur));
-    padding: 8px 12px;
+    padding: 8px 12px; border-radius: var(--panel-radius);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all .3s ease;

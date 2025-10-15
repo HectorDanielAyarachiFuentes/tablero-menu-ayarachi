@@ -1,6 +1,6 @@
 import { $, $$, storageGet, storageSet } from './utils.js';
-import { saveAndSyncSetting } from './utils.js'; // storageSet is also used directly, so it's better to import it explicitly.
-import { updateActiveGradientButton, showSaveStatus, updateDataTabUI, renderGreeting, updateSliderValueSpans, updateBgModeUI } from './ui.js';
+import { saveAndSyncSetting } from './utils.js';
+import { updateActiveGradientButton, showSaveStatus, updateDataTabUI, renderGreeting, updateSliderValueSpans, updateBgModeUI, updatePanelRgb } from './ui.js';
 import { updateBackground } from './app.js';
 import { tiles, trash, setTiles, setTrash, saveAndRender, renderTiles, renderTrash, renderNotes } from './tiles.js';
 import { THEMES } from './themes-config.js';
@@ -10,6 +10,13 @@ import { STORAGE_KEYS } from './config.js';
 
 let appState = {};
 let importInput;
+
+const DEFAULT_PANEL_SETTINGS = {
+    panelBg: '#0e193a',
+    panelOpacity: 0.05,
+    panelBlur: 6,
+    panelRadius: 12
+};
 
 export function initSettings(initialState) {
     appState = initialState;
@@ -101,6 +108,21 @@ export function initSettings(initialState) {
         importInput.addEventListener('change', handleImport);
         document.body.appendChild(importInput);
     }
+
+    // Inicializar valores de los paneles
+    storageGet(['panelBg', 'panelOpacity', 'panelBlur', 'panelRadius']).then(settings => {
+        const panelBg = settings.panelBg || DEFAULT_PANEL_SETTINGS.panelBg;
+        const panelOpacity = settings.panelOpacity ?? DEFAULT_PANEL_SETTINGS.panelOpacity;
+        const panelBlur = settings.panelBlur ?? DEFAULT_PANEL_SETTINGS.panelBlur;
+        const panelRadius = settings.panelRadius ?? DEFAULT_PANEL_SETTINGS.panelRadius;
+
+        $('#panelColor').value = panelBg;
+        $('#panelColorValue').value = panelBg;
+        $('#panelOpacity').value = panelOpacity;
+        $('#panelBlur').value = panelBlur;
+        $('#panelRadius').value = panelRadius;
+        updateSliderValueSpans();
+    });
 }
 
 export async function loadGradients(activeGradient) {
@@ -131,14 +153,10 @@ export function applyTheme(themeId) {
         document.documentElement.style.setProperty(key, value);
     }
 
-    // Convertir color del panel a RGB para usar con opacidad
-    const panelBg = theme.cssVariables['--panel-bg'];
-    if (panelBg.startsWith('#')) {
-        const r = parseInt(panelBg.slice(1, 3), 16);
-        const g = parseInt(panelBg.slice(3, 5), 16);
-        const b = parseInt(panelBg.slice(5, 7), 16);
-        document.documentElement.style.setProperty('--panel-bg-rgb', `${r}, ${g}, ${b}`);
-    }
+    // Si no hay un color de panel personalizado, usar el del tema.
+    storageGet(['panelBg']).then(({ panelBg }) => {
+        if (!panelBg) updatePanelRgb(theme.cssVariables['--panel-bg']);
+    });
 
     document.body.style.backgroundImage = theme.background;
     document.body.classList.add('theme-background');
@@ -155,14 +173,10 @@ export function applyGradient(gradientId) {
         document.documentElement.style.setProperty(key, value);
     }
 
-    // Convertir color del panel a RGB para usar con opacidad
-    const panelBg = colors['--panel-bg'];
-    if (panelBg.startsWith('#')) {
-        const r = parseInt(panelBg.slice(1, 3), 16);
-        const g = parseInt(panelBg.slice(3, 5), 16);
-        const b = parseInt(panelBg.slice(5, 7), 16);
-        document.documentElement.style.setProperty('--panel-bg-rgb', `${r}, ${g}, ${b}`);
-    }
+    // Si no hay un color de panel personalizado, usar el del degradado.
+    storageGet(['panelBg']).then(({ panelBg }) => {
+        if (!panelBg) updatePanelRgb(colors['--panel-bg']);
+    });
 
     document.body.style.backgroundImage = gradient.gradient;
 }
@@ -187,6 +201,7 @@ export function applyBackgroundStyles(mode = 'cover') {
         style.backgroundPosition = 'center center';
         style.backgroundRepeat = 'no-repeat';
     }
+    document.documentElement.style.setProperty('--panel-radius', `${appState.panelRadius || DEFAULT_PANEL_SETTINGS.panelRadius}px`);
     document.body.classList.remove('theme-background');
 }
 

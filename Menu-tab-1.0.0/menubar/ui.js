@@ -272,8 +272,18 @@ export function updatePanelRgb(hex) {
  * Restablece la configuración de los paneles a sus valores predeterminados.
  */
 async function resetPanelSettings() {
+    // Importamos dinámicamente para evitar dependencias circulares
+    const { GRADIENTS, DEFAULT_GRADIENT_COLORS } = await import('../utils/gradients.js');
+
+    // Obtenemos el degradado actual para saber qué color de panel por defecto aplicar
+    const { gradient: currentGradientId } = await storageGet(['gradient']);
+    const currentGradient = GRADIENTS.find(g => g.id === currentGradientId);
+    
+    // Determinamos el color de panel por defecto basado en el degradado actual o un valor global
+    const defaultPanelColor = currentGradient?.cssVariables?.['--panel-bg'] || DEFAULT_GRADIENT_COLORS['--panel-bg'] || '#0e193a';
+
     const defaults = {
-        panelBg: '#0e193a',
+        panelBg: defaultPanelColor,
         panelOpacity: 0.05,
         panelBlur: 6,
         panelRadius: 12

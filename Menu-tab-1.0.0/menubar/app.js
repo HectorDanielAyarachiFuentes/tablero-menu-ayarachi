@@ -1,7 +1,7 @@
 import { $, storageGet, storageSet } from './utils.js';
 import { STORAGE_KEYS } from './config.js';
 
-import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateSliderValueSpans, updateDataTabUI } from './ui.js';
+import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateSliderValueSpans, updateDataTabUI, updatePanelRgb } from './ui.js';
 import { initTiles, renderTiles, tiles, setTiles, renderEditor, renderNotes, setTrash, renderTrash } from './tiles.js';
 import { initSearch, renderFavoritesInSelect } from '../utils/search.js';
 import { initSettings, loadGradients, applyTheme, applyGradient, applyBackgroundStyles } from './settings.js';
@@ -98,12 +98,20 @@ async function applySettings(settings, isUpdate = false) {
 
   await updateBackground();
 
+  const panelBg = settings.panelBg || '#0e193a';
   const panelOpacity = settings.panelOpacity ?? 0.05;
   const panelBlur = settings.panelBlur ?? 6;
+  const panelRadius = settings.panelRadius ?? 12;
+  document.documentElement.style.setProperty('--panel-bg', panelBg);
   document.documentElement.style.setProperty('--panel-opacity', panelOpacity);
   document.documentElement.style.setProperty('--panel-blur', `${panelBlur}px`);
+  document.documentElement.style.setProperty('--panel-radius', `${panelRadius}px`);
+  updatePanelRgb(panelBg); // Asegura que el valor RGB se actualice para la opacidad
+  $('#panelColor').value = panelBg;
+  $('#panelColorValue').value = panelBg;
   $('#panelOpacity').value = panelOpacity;
   $('#panelBlur').value = panelBlur;
+  $('#panelRadius').value = panelRadius;
   updateSliderValueSpans();
 
   await storageSet({ engine: settings.engine || 'google' });

@@ -80,8 +80,21 @@
     };
 
     // Leemos la configuración desde chrome.storage
-    const keys = ['bgData', 'bgUrl', 'gradient', 'randomBg', 'bgDisplayMode'];
+    const keys = ['bgData', 'bgUrl', 'gradient', 'randomBg', 'bgDisplayMode', 'panelBg', 'panelOpacity', 'panelBlur', 'panelRadius'];
     const settings = await new Promise(resolve => (chrome.storage.sync || chrome.storage.local).get(keys, resolve));
+
+    // Aplicar estilos de panel de forma temprana para evitar FOUC
+    if (settings) {
+      const panelBg = settings.panelBg || '#0e193a';
+      const panelOpacity = settings.panelOpacity ?? 0.05;
+      const panelBlur = settings.panelBlur ?? 6;
+      const panelRadius = settings.panelRadius ?? 12;
+      document.documentElement.style.setProperty('--panel-bg', panelBg);
+      document.documentElement.style.setProperty('--panel-opacity', panelOpacity);
+      document.documentElement.style.setProperty('--panel-blur', `${panelBlur}px`);
+      document.documentElement.style.setProperty('--panel-radius', `${panelRadius}px`);
+    }
+
     applyBackground(settings);
 
   } catch (error) {

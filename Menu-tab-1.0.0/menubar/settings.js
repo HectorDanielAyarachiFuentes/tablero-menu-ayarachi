@@ -108,21 +108,6 @@ export function initSettings(initialState) {
         importInput.addEventListener('change', handleImport);
         document.body.appendChild(importInput);
     }
-
-    // Inicializar valores de los paneles
-    storageGet(['panelBg', 'panelOpacity', 'panelBlur', 'panelRadius']).then(settings => {
-        const panelBg = settings.panelBg || DEFAULT_PANEL_SETTINGS.panelBg;
-        const panelOpacity = settings.panelOpacity ?? DEFAULT_PANEL_SETTINGS.panelOpacity;
-        const panelBlur = settings.panelBlur ?? DEFAULT_PANEL_SETTINGS.panelBlur;
-        const panelRadius = settings.panelRadius ?? DEFAULT_PANEL_SETTINGS.panelRadius;
-
-        $('#panelColor').value = panelBg;
-        $('#panelColorValue').value = panelBg;
-        $('#panelOpacity').value = panelOpacity;
-        $('#panelBlur').value = panelBlur;
-        $('#panelRadius').value = panelRadius;
-        updateSliderValueSpans();
-    });
 }
 
 export async function loadGradients(activeGradient) {

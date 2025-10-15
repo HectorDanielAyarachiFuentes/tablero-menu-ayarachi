@@ -7,8 +7,10 @@ export const STORAGE_KEYS = [
   'userName',
   'weatherCity',
   'gradient',
+  'panelBg',
   'panelOpacity',
   'panelBlur',
+  'panelRadius',
   'randomBg',
   'trash', // Re-added trash
   'autoSync',

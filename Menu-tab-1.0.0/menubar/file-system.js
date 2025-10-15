@@ -94,6 +94,13 @@ export const FileSystem = {
         // `dataToSave` puede contener otras actualizaciones que también se fusionarán.
         const fullData = { ...allSettings, ...dataToSave, tiles, trash };
         
+        // Asegurarnos de que las configuraciones de los paneles siempre se incluyan desde el estado más reciente
+        // Esto es crucial porque `dataToSave` podría no tenerlos si no se cambiaron en la última acción.
+        fullData.panelBg = allSettings.panelBg;
+        fullData.panelOpacity = allSettings.panelOpacity;
+        fullData.panelBlur = allSettings.panelBlur;
+        fullData.panelRadius = allSettings.panelRadius;
+
         // Excluimos los datos del clima para no guardarlos en el archivo, solo la ciudad.
         delete fullData.weather;
         // Excluimos el handle del directorio para no guardarlo dentro del propio archivo.

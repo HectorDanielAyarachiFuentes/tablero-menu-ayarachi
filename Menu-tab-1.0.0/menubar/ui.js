@@ -32,9 +32,15 @@ export function initUI() {
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             tabButtons.forEach(b => b.classList.remove('active'));
+            tabPanes.forEach(pane => {
+                pane.classList.remove('active');
+                pane.style.display = 'none'; // Ocultar para la animación
+            });
+
             btn.classList.add('active');
-            tabPanes.forEach(pane => pane.classList.remove('active'));
-            $(`#tab-${btn.dataset.tab}`)?.classList.add('active');
+            const activePane = $(`#tab-${btn.dataset.tab}`);
+            activePane.style.display = 'block';
+            setTimeout(() => activePane.classList.add('active'), 10); // Permitir que se aplique display:block
         });
     });
 

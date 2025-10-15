@@ -572,7 +572,7 @@ function openModal(index = null, forceType = null) {
         // Show type selector only when creating a new item from the main board
         // The type selector is no longer needed for adding from the main board.
     }
-    modal.hidden = false;
+    modal.setAttribute('aria-hidden', 'false');
     setTimeout(() => modal.classList.add('is-open'), 10);
     $('#modalName').focus();
 }
@@ -583,7 +583,7 @@ export function closeModal() {
     editing = null;
     $('#overlay').setAttribute('aria-hidden', 'true');
     $('#modalIconFile').value = '';
-    setTimeout(() => { modal.hidden = true; }, 300);
+    setTimeout(() => { modal.setAttribute('aria-hidden', 'true'); }, 300);
 }
 
 function handleModalSave() {
@@ -741,7 +741,7 @@ function updateIconPreview(src, isCustom) {
 }
 
 function handleModalKeydown(e) {
-    if ($('#modal').hidden) return;
+    if ($('#modal').getAttribute('aria-hidden') === 'true') return;
     // La tecla Escape ahora se gestiona en ui.js para cerrar cualquier panel abierto.
     // if (e.key === 'Escape') closeModal();
     if (e.key === 'Enter' && e.ctrlKey) { handleModalSave(); }

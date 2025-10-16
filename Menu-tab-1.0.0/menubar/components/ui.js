@@ -7,6 +7,7 @@ import { $, $$, saveAndSyncSetting, storageGet } from '../core/utils.js';
 import { FolderManager } from '../core/carpetas.js';
 import { renderTiles, saveAndRender, tiles, trash, setTiles, setTrash } from '../core/tiles.js';
 import { closeModal } from './modal.js'; 
+import { PREDEFINED_GREETINGS } from '../../utils/greetings-list.js';
 import { FileSystem } from '../system/file-system.js';
 import { initPanelSettings } from '../settings/settings-panels.js';
 
@@ -85,20 +86,60 @@ export function switchToTab(tabId) {
     setTimeout(() => paneToActivate?.classList.add('active'), 10); // Permitir que se aplique display:block
 }
 
-export function renderGreeting(name) {
+function getRandomGreeting(period, greetingsList) {
+    const options = greetingsList.filter(g => g.period === period);
+    return options[Math.floor(Math.random() * options.length)];
+}
+
+export async function renderGreeting(name) {
     const hour = new Date().getHours();
-    let greetingText = '¡Hola!';
-    if (hour < 12) greetingText = 'Buenos días';
-    else if (hour < 20) greetingText = 'Buenas tardes';
-    else greetingText = 'Buenas noches';
+    let period;
+    if (hour >= 5 && hour < 12) period = 'morning';
+    else if (hour >= 12 && hour < 20) period = 'afternoon';
+    else period = 'night';
+
+    const { greetingPreference, customGreetings } = await storageGet(['greetingPreference', 'customGreetings']);
+    let greetingText;
+    const preference = greetingPreference || 'random';
+
+    if (preference === 'custom' && customGreetings && customGreetings.trim().length > 0) {
+        const customList = customGreetings.split('\n').filter(line => line.trim() !== '');
+        greetingText = customList[Math.floor(Math.random() * customList.length)];
+    } else if (preference === 'random') {
+        const randomGreeting = getRandomGreeting(period, PREDEFINED_GREETINGS);
+        greetingText = randomGreeting.text;
+    } else {
+        // Es un ID de saludo específico
+        const selectedGreeting = PREDEFINED_GREETINGS.find(g => g.id === preference);
+        greetingText = selectedGreeting ? selectedGreeting.text : getRandomGreeting(period, PREDEFINED_GREETINGS).text;
+    }
 
     const namePart = name ? `, <strong>${name}</strong>` : '';
     $('#greeting').innerHTML = `${greetingText}${namePart}`;
 }
 
-export function updateClock() {
+export async function updateClock() {
     const now = new Date();
-    $('#clock').textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; // Targets .clock-header
+    const { use12HourFormat, showSeconds } = await storageGet(['use12HourFormat', 'showSeconds']);
+
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    let ampm = '';
+
+    if (use12HourFormat) {
+        ampm = hours >= 12 ? ' PM' : ' AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // La hora 0 debe ser 12
+    }
+
+    let timeString = use12HourFormat ? `${hours}:${minutes}` : `${String(hours).padStart(2, '0')}:${minutes}`;
+    if (showSeconds) {
+        timeString += `:${seconds}`;
+    }
+    timeString += ampm;
+
+    $('#clock').textContent = timeString;
     const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const formattedDate = new Intl.DateTimeFormat('es-ES', dateOptions).format(now);
     $('#date').textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);

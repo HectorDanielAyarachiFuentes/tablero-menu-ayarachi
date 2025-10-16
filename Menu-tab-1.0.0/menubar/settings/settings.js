@@ -1,6 +1,6 @@
 /**
  * Gestiona toda la lógica del panel de configuración.
- * Incluye la inicialización de los listeners para las diferentes pestañas (Fondo, Datos, etc.),
+ * Incluye la inicialización de los listeners para las diferentes pestañas (General, Fondo, Datos, etc.),
  * y maneja la lógica para cambiar temas, fondos, importar/exportar datos y más.
  */
 import { $, $$, storageGet, storageSet } from '../core/utils.js';
@@ -13,6 +13,7 @@ import { renderNotes } from '../components/notes.js';
 import { renderTrash } from '../components/trash.js';
 import { GRADIENTS, DEFAULT_GRADIENT_COLORS } from '../../utils/gradients.js';
 import { FileSystem } from '../system/file-system.js';
+import { PREDEFINED_GREETINGS } from '../../utils/greetings-list.js';
 import { STORAGE_KEYS } from '../core/config.js';
 
 let appState = {};
@@ -51,6 +52,62 @@ export function initSettings(initialState) {
 
     $$('#tab-fondo .sub-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => switchToBackgroundSubTab(btn.dataset.subtab));
+    });
+
+    $$('#tab-general .sub-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchToGeneralSubTab(btn.dataset.subtab));
+    });
+
+    // --- Lógica para la pestaña General (nuevas opciones de reloj y saludos) ---
+    populateGreetingSelect();
+    storageGet(['use12HourFormat', 'showSeconds', 'greetingPreference', 'customGreetings']).then(settings => {
+        $('#clockFormatToggle').checked = settings.use12HourFormat ?? false;
+        $('#showSecondsToggle').checked = settings.showSeconds ?? false;
+        $('#greetingSelect').value = settings.greetingPreference || 'random';
+        $('#customGreetingsInput').value = settings.customGreetings || '';
+        $('#customGreetingsContainer').hidden = $('#greetingSelect').value !== 'custom';
+    });
+
+    $('#clockFormatToggle').addEventListener('change', e => {
+        saveAndSyncSetting({ use12HourFormat: e.target.checked });
+    });
+
+    $('#showSecondsToggle').addEventListener('change', e => {
+        saveAndSyncSetting({ showSeconds: e.target.checked });
+    });
+
+    $('#greetingSelect').addEventListener('change', e => {
+        const preference = e.target.value;
+        $('#customGreetingsContainer').hidden = (preference !== 'custom');
+        saveAndSyncSetting({ greetingPreference: preference }, () => {
+            renderGreeting($('#userName').value);
+        });
+    });
+
+    $('#customGreetingsInput').addEventListener('input', e => {
+        // Usamos un debounce implícito al guardar solo al final de la escritura
+        saveAndSyncSetting({ customGreetings: e.target.value }, () => {
+            // Si el modo "custom" está activo, actualiza el saludo en tiempo real
+            if ($('#greetingSelect').value === 'custom') renderGreeting($('#userName').value);
+        });
+    });
+
+    // --- Lógica para la pestaña General (nuevas opciones) ---
+    const uiToggles = {
+        showSearchToggle: { selector: '.search-section', key: 'showSearch' },
+        showWeatherToggle: { selector: '#weather', key: 'showWeather' },
+        showDateToggle: { selector: '#date', key: 'showDate' }
+    };
+
+    Object.entries(uiToggles).forEach(([toggleId, { selector, key }]) => {
+        const toggle = $(`#${toggleId}`);
+        const element = $(selector);
+        // Establecer estado inicial del interruptor
+        storageGet([key]).then(settings => toggle.checked = settings[key] ?? true);
+        // Añadir listener
+        toggle.addEventListener('change', (e) => {
+            saveAndSyncSetting({ [key]: e.target.checked }, () => element.hidden = !e.target.checked);
+        });
     });
 
     // --- Nueva lógica para la pestaña de Datos ---
@@ -142,6 +199,45 @@ function switchToBackgroundSubTab(subTabId) {
     // Activar el panel y el botón correctos
     $(`#subtab-${subTabId}`).classList.add('active');
     $(`.sub-tab-btn[data-subtab="${subTabId}"]`).classList.add('active');
+}
+
+/**
+ * Cambia entre las sub-pestañas de la sección "General".
+ * @param {string} subTabId - El ID de la sub-pestaña a activar (ej. 'contenido', 'apariencia').
+ */
+function switchToGeneralSubTab(subTabId) {
+    // Ocultar todos los paneles y desactivar todos los botones de la pestaña General
+    $$('#tab-general .sub-tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+    });
+    $$('#tab-general .sub-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Activar el panel y el botón correctos
+    $(`#subtab-${subTabId}`).classList.add('active');
+    $(`#tab-general .sub-tab-btn[data-subtab="${subTabId}"]`).classList.add('active');
+}
+
+/**
+ * Rellena el <select> de saludos con las opciones predefinidas.
+ */
+function populateGreetingSelect() {
+    const select = $('#greetingSelect');
+    const optgroupMorning = document.createElement('optgroup');
+    optgroupMorning.label = 'Mañana';
+    const optgroupAfternoon = document.createElement('optgroup');
+    optgroupAfternoon.label = 'Tarde';
+    const optgroupNight = document.createElement('optgroup');
+    optgroupNight.label = 'Noche';
+
+    PREDEFINED_GREETINGS.forEach(g => {
+        const option = new Option(g.text, g.id);
+        if (g.period === 'morning') optgroupMorning.appendChild(option);
+        else if (g.period === 'afternoon') optgroupAfternoon.appendChild(option);
+        else optgroupNight.appendChild(option);
+    });
+    select.append(optgroupMorning, optgroupAfternoon, optgroupNight);
 }
 
 export async function loadGradients(activeGradient) {

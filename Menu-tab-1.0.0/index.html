@@ -159,13 +159,74 @@
       </div>
       <!-- Tab: General -->
       <div class="tab-pane" id="tab-general">
-        <div class="field">
-          <label for="userName">Tu Nombre</label>
-          <input id="userName" placeholder="¿Cómo te llamas?" />
+        <div class="sub-tabs">
+          <button class="sub-tab-btn active" data-subtab="contenido">Contenido</button>
+          <button class="sub-tab-btn" data-subtab="apariencia">Apariencia</button>
         </div>
-        <div class="field">
-            <label for="weatherCity">Ubicación del Clima</label>
-            <input id="weatherCity" placeholder="Dejar en blanco para autodetectar" />
+        <div class="sub-tab-content">
+          <!-- Sub-tab: Contenido -->
+          <div class="sub-tab-pane active" id="subtab-contenido">
+            <div class="field">
+              <label for="userName">Tu Nombre</label>
+              <input id="userName" placeholder="¿Cómo te llamas?" />
+            </div>
+            <div class="field">
+              <label for="weatherCity">Ubicación del Clima</label>
+              <input id="weatherCity" placeholder="Dejar en blanco para autodetectar" />
+            </div>
+            <div class="field">
+              <label for="greetingSelect">Tipo de Saludo</label>
+              <select id="greetingSelect">
+                <option value="random">Aleatorio (por momento del día)</option>
+                <option value="custom">Personalizado</option>
+                <!-- Los saludos predefinidos se cargarán aquí -->
+              </select>
+            </div>
+            <div class="field" id="customGreetingsContainer" hidden>
+              <label for="customGreetingsInput">Mis Saludos (uno por línea)</label>
+              <textarea id="customGreetingsInput" rows="4" placeholder="¡Qué onda, campeón! 😎\n¡A darle que es mole de olla!"></textarea>
+            </div>
+          </div>
+          <!-- Sub-tab: Apariencia -->
+          <div class="sub-tab-pane" id="subtab-apariencia">
+            <div class="field">
+              <label>Formato del Reloj</label>
+            </div>
+            <div class="field field-toggle">
+              <label for="clockFormatToggle">Usar formato de 12 horas (AM/PM)</label>
+              <div class="switch-container">
+                <label class="switch"><input type="checkbox" id="clockFormatToggle"><span class="slider round"></span></label>
+              </div>
+            </div>
+            <div class="field field-toggle">
+              <label for="showSecondsToggle">Mostrar segundos en el reloj</label>
+              <div class="switch-container">
+                <label class="switch"><input type="checkbox" id="showSecondsToggle"><span class="slider round"></span></label>
+              </div>
+            </div>
+            <div class="field">
+              <label>Elementos de la Interfaz</label>
+              <p class="field-description">Controla qué elementos se muestran en la página principal.</p>
+            </div>
+            <div class="field field-toggle">
+              <label for="showSearchToggle">Mostrar barra de búsqueda</label>
+              <div class="switch-container">
+                <label class="switch"><input type="checkbox" id="showSearchToggle"><span class="slider round"></span></label>
+              </div>
+            </div>
+            <div class="field field-toggle">
+              <label for="showWeatherToggle">Mostrar widget del clima</label>
+              <div class="switch-container">
+                <label class="switch"><input type="checkbox" id="showWeatherToggle"><span class="slider round"></span></label>
+              </div>
+            </div>
+            <div class="field field-toggle">
+              <label for="showDateToggle">Mostrar fecha completa</label>
+              <div class="switch-container">
+                <label class="switch"><input type="checkbox" id="showDateToggle"><span class="slider round"></span></label>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <!-- Tab: Fondo -->

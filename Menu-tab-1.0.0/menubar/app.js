@@ -107,6 +107,15 @@ async function applySettings(settings, isUpdate = false) {
   renderGreeting(settings.userName);
   renderFavoritesInSelect();
 
+  // Cargar y aplicar configuraciones de visibilidad de la UI
+  const showSearch = settings.showSearch ?? true;
+  const showWeather = settings.showWeather ?? true;
+  const showDate = settings.showDate ?? true;
+  $('.search-section').hidden = !showSearch;
+  $('#weather').hidden = !showWeather;
+  $('#date').hidden = !showDate;
+
+
   const panelBg = settings.panelBg || '#0e193a';
   const panelOpacity = settings.panelOpacity ?? 0.05;
   const panelBlur = settings.panelBlur ?? 6;

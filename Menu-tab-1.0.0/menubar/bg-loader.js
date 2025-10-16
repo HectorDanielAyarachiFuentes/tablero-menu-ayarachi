@@ -5,6 +5,7 @@
  * Lee la configuración de fondo guardada (tema, gradiente, URL o datos de imagen) y la aplica
  * al body ANTES de que la página se renderice por completo.
  */
+// Usamos una IIFE asíncrona para poder usar await
 import { GRADIENTS, DEFAULT_GRADIENT_COLORS } from '../utils/gradients.js';
 
 (async () => {
@@ -23,78 +24,72 @@ import { GRADIENTS, DEFAULT_GRADIENT_COLORS } from '../utils/gradients.js';
         style.backgroundRepeat = 'no-repeat';
       } else if (mode === 'center') {
         style.backgroundSize = 'auto';
-        style.backgroundPosition = 'center center';
+        style.backgroundPosition = 'center center'; // Asegurar que esté centrado
       }
+      // 'cover' is the default
     };
 
     const applyGradient = (gradientId, settings) => {
       const gradient = GRADIENTS.find(g => g.id === gradientId);
-      if (!gradient) {
-          // Si no se encuentra el gradiente, aplicar uno por defecto para evitar el flash azul
-          const defaultGradient = GRADIENTS[0];
-          if (!defaultGradient) return;
-          document.body.style.backgroundImage = defaultGradient.gradient;
-          for (const [key, value] of Object.entries(defaultGradient.cssVariables || DEFAULT_GRADIENT_COLORS)) {
-            document.documentElement.style.setProperty(key, value);
-          }
-          return;
-      }
+      if (!gradient) return;
 
       const colors = gradient.cssVariables || DEFAULT_GRADIENT_COLORS;
 
+      // Aplicar todas las variables CSS del degradado (o las por defecto)
       for (const [key, value] of Object.entries(colors)) {
+        // No sobreescribir los colores de panel si ya están personalizados por el usuario
         if (key.startsWith('--panel') && settings[key.substring(2)]) {
           continue;
         }
         document.documentElement.style.setProperty(key, value);
       }
 
+      // Aplicar el fondo de degradado
       document.body.style.backgroundImage = gradient.gradient;
     };
 
     const applyBackground = (settings) => {
+      // Si no hay configuraciones, aplicamos el primer gradiente como fallback para evitar el flash.
       if (!settings) {
-        // Si no hay configuración, aplicamos un gradiente por defecto para evitar el flash.
         applyGradient(GRADIENTS[0].id, {});
         return;
       }
 
-      // CORRECCIÓN: Se reordena la lógica para que siempre se aplique un fondo.
-      // Prioridad 1: Doodle. Si hay un doodle, limpiamos el fondo del body para que el doodle se vea.
+      // Prioridad 1: Doodle. Si hay un doodle, el fondo se pone transparente para que se vea.
       if (settings.doodle && settings.doodle !== 'none') {
         document.body.style.backgroundImage = 'none';
-        document.body.style.backgroundColor = 'transparent'; // Esencial para que el doodle sea el fondo
-      } 
+        document.body.style.backgroundColor = 'transparent';
+        return;
+      }
+
       // Prioridad 2: Imagen de fondo (local o URL)
-      else if (settings.bgData) {
+      if (settings.bgData) {
         document.body.style.backgroundImage = `url('${settings.bgData}')`;
         applyBackgroundStyles(settings.bgDisplayMode);
       } else if (settings.bgUrl) {
         document.body.style.backgroundImage = `url('${settings.bgUrl}')`;
         applyBackgroundStyles(settings.bgDisplayMode);
-      } 
-      // Prioridad 3: Degradado guardado.
-      else if (settings.gradient) {
+      } else if (settings.gradient) {
+        // Prioridad 3: Degradado guardado.
         applyGradient(settings.gradient, settings);
-      } 
-      // Prioridad 4: Degradado aleatorio.
-      else if (settings.randomBg) {
+      } else if (settings.randomBg) {
+        // Prioridad 4: Degradado aleatorio.
         const randomGradient = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
         applyGradient(randomGradient.id, settings);
-      }
-      // Prioridad 5 (Fallback): Si no hay nada configurado, usar el primer gradiente.
-      else {
+      } else {
+        // Fallback final: si ninguna otra opción está configurada, usar el primer gradiente.
         applyGradient(GRADIENTS[0].id, settings);
       }
     };
 
-    // Leemos la configuración desde chrome.storage
+    // Leemos la configuración desde chrome.storage.local para máxima velocidad
     const keys = [
       'doodle', 'bgData', 'bgUrl', 'gradient', 'randomBg', 'bgDisplayMode',
       'panelBg', 'panelOpacity', 'panelBlur', 'panelRadius',
       'panelTextColor', 'panelTextSecondaryColor'
     ];
-    const settings = await new Promise(resolve => (chrome.storage.sync || chrome.storage.local).get(keys, resolve));
+    // CAMBIO: Se usa chrome.storage.local explícitamente por ser más rápido y consistente.
+    const settings = await new Promise(resolve => chrome.storage.local.get(keys, resolve));
 
     // Aplicar estilos de panel de forma temprana para evitar FOUC
     if (settings) {
@@ -105,14 +100,12 @@ import { GRADIENTS, DEFAULT_GRADIENT_COLORS } from '../utils/gradients.js';
       style.setProperty('--panel-radius', `${settings.panelRadius ?? 12}px`);
       style.setProperty('--panel-text-color', settings.panelTextColor || '#dbe7ff');
       style.setProperty('--panel-text-secondary-color', settings.panelTextSecondaryColor || '#dbe7ff');
+
+      // Aplicar fondo de la página
+      applyBackground(settings);
     }
-    
-    // Aplicar fondo de la página
-    applyBackground(settings);
 
   } catch (error) {
     console.error('Error in bg-loader:', error);
-    // Fallback de emergencia si todo falla: aplicar un fondo oscuro genérico
-    document.body.style.backgroundColor = '#111';
   }
 })();

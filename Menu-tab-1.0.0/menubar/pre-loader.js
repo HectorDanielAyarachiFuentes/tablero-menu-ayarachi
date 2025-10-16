@@ -1,3 +1,5 @@
+// --- START OF FILE pre-loader.js ---
+
 /**
  * Este script se ejecuta de forma síncrona en el <head> ANTES que bg-loader.
  * Su única misión es rellenar el saludo, la fecha y la hora lo más rápido posible
@@ -5,8 +7,9 @@
  */
 (async () => {
   try {
+    // CAMBIO: Se usa chrome.storage.local explícitamente por ser más rápido.
     const settings = await new Promise(resolve =>
-      (chrome.storage.sync || chrome.storage.local).get(['userName', 'weatherCity'], resolve)
+      chrome.storage.local.get(['userName', 'weatherCity'], resolve)
     );
 
     // --- Renderizar Saludo ---

@@ -1,3 +1,5 @@
+// --- START OF FILE utils.js ---
+
 /**
  * Proporciona funciones de utilidad reutilizables en toda la aplicación.
  * Incluye selectores de DOM, helpers para el almacenamiento y una función de guardado con debounce.
@@ -13,7 +15,7 @@ let saveDebounceTimer;
 // storage helpers supporting chrome.storage.sync or fallback to localStorage
 export const storageGet = (keys, useCache = false) => new Promise(resolve => {
   if (window.chrome && chrome.storage?.local) {
-    // Siempre leemos de local, que es nuestra "fuente de verdad" en el navegador.
+    // Siempre leemos de local, que es nuestra "fuente de verdad" en el navegador para la carga inicial.
     chrome.storage.local.get(keys, resolve);
   } else { // Fallback para cuando no es una extensión
     const out = {};
@@ -22,15 +24,27 @@ export const storageGet = (keys, useCache = false) => new Promise(resolve => {
   }
 });
 
-export const storageSet = (obj) => new Promise(resolve => {
-  if (window.chrome && chrome.storage?.local) {
-    // Solo guardamos en local. La sincronización con el archivo se maneja por separado.
-    chrome.storage.local.set(obj, resolve);
-  } else {
-    Object.keys(obj).forEach(k => localStorage.setItem(k, JSON.stringify(obj[k])));
-    resolve();
-  }
-});
+// CAMBIO: La función de guardado ahora escribe en `local` (para velocidad) y `sync` (para sincronización)
+export const storageSet = (obj) => {
+  return new Promise(async (resolve) => {
+    if (window.chrome && chrome.storage) {
+      // Guardamos en local para acceso rápido e inmediato. Esperamos a que termine.
+      await new Promise(res => chrome.storage.local.set(obj, res));
+
+      // También guardamos en sync para la sincronización entre dispositivos.
+      // No necesitamos esperar (await) a que termine para no bloquear la UI.
+      if (chrome.storage.sync) {
+        chrome.storage.sync.set(obj);
+      }
+      resolve();
+    } else {
+      // Fallback para cuando no es una extensión
+      Object.keys(obj).forEach(k => localStorage.setItem(k, JSON.stringify(obj[k])));
+      resolve();
+    }
+  });
+};
+
 
 /**
  * Función de guardado en archivo con "debounce".

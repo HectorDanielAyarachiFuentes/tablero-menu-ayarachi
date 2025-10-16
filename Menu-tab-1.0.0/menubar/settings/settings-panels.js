@@ -34,6 +34,7 @@ const PANEL_THEMES = [
     { id: 'parchment', name: 'Pergamino', panelBg: '#fcf5e5', panelOpacity: 0.85, panelBlur: 1, panelRadius: 4, panelShadowEnabled: true, panelShadowColor: '#d2b48c', panelShadowBlur: 10, panelTextColor: '#5d4037', panelTextSecondaryColor: '#795548' },
     { id: 'neon-blue', name: 'Neón Azul', panelBg: '#000022', panelOpacity: 0.1, panelBlur: 12, panelRadius: 20, panelShadowEnabled: true, panelShadowColor: '#0000ff', panelShadowBlur: 25, panelTextColor: '#f0f8ff', panelTextSecondaryColor: '#82b1ff' },
     { id: 'neon-green', name: 'Neón Verde', panelBg: '#002200', panelOpacity: 0.1, panelBlur: 12, panelRadius: 20, panelShadowEnabled: true, panelShadowColor: '#00ff00', panelShadowBlur: 25, panelTextColor: '#f0fff0', panelTextSecondaryColor: '#a5d6a7' },
+    { id: 'neon-pink', name: 'Neón Rosa', panelBg: '#220022', panelOpacity: 0.1, panelBlur: 12, panelRadius: 20, panelShadowEnabled: true, panelShadowColor: '#ff00ff', panelShadowBlur: 25, panelTextColor: '#fff0ff', panelTextSecondaryColor: '#f8bbd0' },
     { id: 'pastel-pink', name: 'Rosa Pastel', panelBg: '#ffc0cb', panelOpacity: 0.3, panelBlur: 8, panelRadius: 16, panelShadowEnabled: false, panelTextColor: '#7c002e', panelTextSecondaryColor: '#c2185b' },
     { id: 'pastel-blue', name: 'Azul Pastel', panelBg: '#aec6cf', panelOpacity: 0.3, panelBlur: 8, panelRadius: 16, panelShadowEnabled: false, panelTextColor: '#1a237e', panelTextSecondaryColor: '#283593' },
     { id: 'holographic', name: 'Holográfico', panelBg: '#ffffff', panelOpacity: 0.05, panelBlur: 15, panelRadius: 25, panelShadowEnabled: true, panelShadowColor: '#ff00ff', panelShadowBlur: 35, panelTextColor: '#4a148c', panelTextSecondaryColor: '#7b1fa2' },
@@ -59,8 +60,8 @@ export function initPanelSettings() {
     $$('#tab-paneles .sub-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => switchToPanelSubTab(btn.dataset.subtab));
     });
-
-    // Controles existentes
+    
+    // Controles de apariencia
     $('#panelColor').addEventListener('input', (e) => handleColorChange('panelBg', e.target.value, '--panel-bg'));
     $('#panelTextColor').addEventListener('input', (e) => handleColorChange('panelTextColor', e.target.value, '--panel-text-color'));
     $('#panelTextSecondaryColor').addEventListener('input', (e) => handleColorChange('panelTextSecondaryColor', e.target.value, '--panel-text-secondary-color'));
@@ -68,9 +69,8 @@ export function initPanelSettings() {
     $('#panelBlur').addEventListener('input', (e) => handlePanelSliderChange('panelBlur', e.target.value, '--panel-blur', 'px'));
     $('#panelRadius').addEventListener('input', (e) => handlePanelSliderChange('panelRadius', e.target.value, '--panel-radius', 'px'));
     $('#resetPanelsBtn').addEventListener('click', resetPanelStyles);
-
-    // Nuevos controles para la sombra
-    $('#panelShadowToggle').addEventListener('change', handleShadowToggle);
+    
+    $('#panelShadowToggle').addEventListener('change', handleShadowToggle); // Controles de sombra
     $('#panelShadowColor').addEventListener('input', (e) => handleShadowColorChange(e.target.value));
     $('#panelShadowBlur').addEventListener('input', (e) => handlePanelSliderChange('panelShadowBlur', e.target.value, '--panel-shadow-blur', 'px'));
 
@@ -88,8 +88,10 @@ function switchToPanelSubTab(subTabId) {
     });
 
     // Activar el panel y el botón correctos
-    const paneToActivate = $(`#subtab-${subTabId}`);
-    const btnToActivate = $(`.sub-tab-btn[data-subtab="${subTabId}"]`);
+    // CORRECCIÓN: Asegurarse de que el selector apunte solo a los elementos dentro de la pestaña de paneles.
+    const paneToActivate = $(`#tab-paneles #subtab-${subTabId}`);
+    const btnToActivate = $(`#tab-paneles .sub-tab-btn[data-subtab="${subTabId}"]`);
+    
     if (paneToActivate) paneToActivate.classList.add('active');
     if (btnToActivate) btnToActivate.classList.add('active');
 }

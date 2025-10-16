@@ -317,7 +317,7 @@
           <div class="sub-tab-pane active" id="subtab-temas">
             <div class="field">
               <label>Temas Predefinidos</label>
-              <div id="panel-theme-list" class="theme-list">
+              <div id="panel-theme-list" class="theme-list panel-theme-list">
                 <!-- Los temas de paneles se cargarán aquí desde JS -->
               </div>
             </div>
@@ -325,33 +325,29 @@
 
           <!-- Sub-tab: Apariencia -->
           <div class="sub-tab-pane" id="subtab-apariencia">
-            <div class="panel-grid">
-              <div class="field">
-                <label for="panelColor">Fondo</label>
-                <div class="input-group-color compact">
-                  <input type="color" id="panelColor" value="#0e193a">
-                </div>
-              </div>
-              <div class="field">
-                <label for="panelTextColor">Texto Principal</label>
-                <input type="color" id="panelTextColor" value="#dbe7ff">
-              </div>
-              <div class="field">
-                <label for="panelTextSecondaryColor">Texto Secundario</label>
-                <input type="color" id="panelTextSecondaryColor" value="#dbe7ff">
-              </div>
-              <div class="field">
-                <label for="panelOpacity">Opacidad <span id="opacityValue">5%</span></label>
-                <input type="range" id="panelOpacity" min="0" max="1" step="0.01" value="0.05">
-              </div>
-              <div class="field">
-                <label for="panelBlur">Desenfoque <span id="blurValue">6px</span></label>
-                <input type="range" id="panelBlur" min="0" max="50" step="1" value="6">
-              </div>
-              <div class="field">
-                <label for="panelRadius">Radio de borde <span id="radiusValue">12px</span></label>
-                <input type="range" id="panelRadius" min="0" max="60" step="1" value="12">
-              </div>
+            <div class="field">
+              <label for="panelColor">Color de Fondo</label>
+              <input type="color" id="panelColor" value="#0e193a">
+            </div>
+            <div class="field">
+              <label for="panelTextColor">Color de Texto Principal</label>
+              <input type="color" id="panelTextColor" value="#dbe7ff">
+            </div>
+            <div class="field">
+              <label for="panelTextSecondaryColor">Color de Texto Secundario</label>
+              <input type="color" id="panelTextSecondaryColor" value="#dbe7ff">
+            </div>
+            <div class="field">
+              <label for="panelOpacity">Opacidad <span id="opacityValue">5%</span></label>
+              <input type="range" id="panelOpacity" min="0" max="1" step="0.01" value="0.05">
+            </div>
+            <div class="field">
+              <label for="panelBlur">Desenfoque <span id="blurValue">6px</span></label>
+              <input type="range" id="panelBlur" min="0" max="50" step="1" value="6">
+            </div>
+            <div class="field">
+              <label for="panelRadius">Radio de borde <span id="radiusValue">12px</span></label>
+              <input type="range" id="panelRadius" min="0" max="60" step="1" value="12">
             </div>
           </div>
 

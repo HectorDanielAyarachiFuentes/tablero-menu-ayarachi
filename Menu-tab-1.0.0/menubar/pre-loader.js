@@ -55,18 +55,18 @@
     if (clockEl) {
         let hours = now.getHours();
         const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const secondsValue = String(now.getSeconds()).padStart(2, '0');
         let ampm = '';
 
         if (settings.use12HourFormat) {
             ampm = hours >= 12 ? ' PM' : ' AM';
             hours = hours % 12;
-            hours = hours ? hours : 12; // La hora 0 debe ser 12
+            hours = hours || 12; // La hora 0 debe ser 12
         }
 
         let timeString = settings.use12HourFormat ? `${hours}:${minutes}` : `${String(hours).padStart(2, '0')}:${minutes}`;
         if (settings.showSeconds) {
-            timeString += `:${seconds}`;
+            timeString += `:${secondsValue}`;
         }
         timeString += ampm;
         clockEl.textContent = timeString;

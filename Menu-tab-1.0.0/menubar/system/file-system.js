@@ -93,21 +93,14 @@ export const FileSystem = {
      * @param {object} dataToSave - Los datos a guardar (tiles, trash, etc.).
      */
     async saveDataToFile(dataToSave) {
-        // Importamos dinámicamente para evitar dependencias circulares y obtener el estado más reciente.
-        const { tiles, trash } = await import('../core/tiles.js');
+        // Obtenemos TODAS las configuraciones guardadas en el navegador.
+        // Usar `null` en storageGet devuelve todos los items.
+        const allSettings = await storageGet(null);
 
-        // Obtenemos TODAS las configuraciones, no solo las de STORAGE_KEYS, para asegurarnos de capturar 'weather'.
-        const allSettings = await storageGet(null); 
-        // Creamos el objeto de datos completo, asegurándonos de incluir siempre los tiles y la papelera.
-        // `dataToSave` puede contener otras actualizaciones que también se fusionarán.
-        const fullData = { ...allSettings, ...dataToSave, tiles, trash };
-        
-        // Asegurarnos de que las configuraciones de los paneles siempre se incluyan desde el estado más reciente
-        // Esto es crucial porque `dataToSave` podría no tenerlos si no se cambiaron en la última acción.
-        fullData.panelBg = allSettings.panelBg;
-        fullData.panelOpacity = allSettings.panelOpacity;
-        fullData.panelBlur = allSettings.panelBlur;
-        fullData.panelRadius = allSettings.panelRadius;
+        // Creamos el objeto de datos completo para guardar.
+        // Esto asegura que cualquier cambio, sin importar dónde se originó,
+        // se incluya en el archivo de respaldo.
+        const fullData = { ...allSettings };
 
         // Excluimos los datos del clima para no guardarlos en el archivo, solo la ciudad.
         delete fullData.weather;

@@ -50,14 +50,16 @@ export const storageSet = (obj) => {
  * Función de guardado en archivo con "debounce".
  * Agrupa múltiples llamadas a guardar en un corto período de tiempo en una sola.
  * @param {object} dataToSave - Datos a fusionar y guardar.
+ * @param {boolean} forceAll - Si es true, fuerza a guardar todos los datos, no solo los del parámetro.
  */
-const debouncedSaveToFile = (dataToSave) => {
+const debouncedSaveToFile = (dataToSave, forceAll = false) => {
     clearTimeout(saveDebounceTimer);
     saveDebounceTimer = setTimeout(async () => {
         // Pasamos el objeto de configuración directamente para que se guarde en el archivo.
         // No es necesario pasar `dataToSave` aquí, ya que `saveDataToFile` obtiene el estado más reciente del storage.
         try {
-            await FileSystem.saveDataToFile({});
+            // Al pasar un objeto vacío, forzamos a saveDataToFile a recolectar todos los datos.
+            await FileSystem.saveDataToFile({}); 
             showSaveStatus();
         } catch (error) {
             // El error ya se muestra en la UI desde file-system.js, aquí solo lo capturamos.
@@ -72,13 +74,18 @@ const debouncedSaveToFile = (dataToSave) => {
  * @param {function(object):void} [applyCallback] - Una función opcional para aplicar los cambios en la UI.
  */
 export async function saveAndSyncSetting(setting, applyCallback) {
+    // 1. Guardar el cambio específico en el almacenamiento del navegador.
     await storageSet(setting);
+    // 2. Aplicar el cambio en la UI si se proporciona un callback.
     if (applyCallback) {
         applyCallback(setting);
     }
+    // 3. Comprobar si la sincronización con archivo está activa.
     const { autoSync } = await storageGet(['autoSync']);
     if (autoSync) {
-        debouncedSaveToFile(setting);
+        // 4. Disparar el guardado en archivo. Pasamos un objeto vacío para forzar
+        //    a que se guarde el estado COMPLETO, no solo este cambio.
+        debouncedSaveToFile({});
     } else {
         showSaveStatus();
     }

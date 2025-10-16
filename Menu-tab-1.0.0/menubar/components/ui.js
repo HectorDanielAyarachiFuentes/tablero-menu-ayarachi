@@ -119,30 +119,31 @@ export async function renderGreeting(name) {
 }
 
 export async function updateClock() {
-    const now = new Date();
-    const { use12HourFormat, showSeconds } = await storageGet(['use12HourFormat', 'showSeconds']);
+  const now = new Date();
+  // Obtenemos la configuración del reloj desde el storage.
+  const { use12HourFormat, showSeconds } = await storageGet(['use12HourFormat', 'showSeconds']);
 
-    let hours = now.getHours();
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    let ampm = '';
+  let hours = now.getHours();
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const secondsValue = String(now.getSeconds()).padStart(2, '0');
+  let ampm = '';
 
-    if (use12HourFormat) {
-        ampm = hours >= 12 ? ' PM' : ' AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12; // La hora 0 debe ser 12
-    }
+  if (use12HourFormat) {
+    ampm = hours >= 12 ? ' PM' : ' AM';
+    hours = hours % 12;
+    hours = hours || 12; // La hora 0 debe ser 12
+  }
 
-    let timeString = use12HourFormat ? `${hours}:${minutes}` : `${String(hours).padStart(2, '0')}:${minutes}`;
-    if (showSeconds) {
-        timeString += `:${seconds}`;
-    }
-    timeString += ampm;
+  let timeString = use12HourFormat ? `${hours}:${minutes}` : `${String(hours).padStart(2, '0')}:${minutes}`;
+  if (showSeconds) {
+    timeString += `:${secondsValue}`;
+  }
+  timeString += ampm;
 
-    $('#clock').textContent = timeString;
-    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const formattedDate = new Intl.DateTimeFormat('es-ES', dateOptions).format(now);
-    $('#date').textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+  $('#clock').textContent = timeString;
+  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const formattedDate = new Intl.DateTimeFormat('es-ES', dateOptions).format(now);
+  $('#date').textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 }
 
 export function updateActiveThemeButton(theme) {

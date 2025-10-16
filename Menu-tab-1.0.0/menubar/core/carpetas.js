@@ -1,3 +1,7 @@
+/**
+ * Gestiona la lógica de navegación y renderizado de carpetas.
+ * Mantiene el estado de la ruta actual y proporciona métodos para navegar dentro y fuera de las carpetas.
+ */
 import { renderTiles, saveAndRender } from './tiles.js';
 
 let viewPath = []; // Private state for folder path
@@ -75,16 +79,16 @@ export const FolderManager = {
         node.addEventListener('dragleave', () => node.classList.remove('drag-over-folder'));
         node.addEventListener('drop', ev => {
             ev.preventDefault();
+            ev.stopPropagation(); // ¡CLAVE! Evita que el evento se propague al contenedor #tiles
             ev.currentTarget.classList.remove('drag-over-folder');
             const fromIndex = Number(ev.dataTransfer.getData('text/plain'));
-            const toIndex = index;
             const currentLevel = FolderManager.getTilesForCurrentView(rootTiles);
             const item = currentLevel.splice(fromIndex, 1)[0];
 
-            if (tile.type === 'folder' && item.type === 'link') {
+            if (tile.type === 'folder' && item !== tile) { // Asegurarse de no soltar una carpeta sobre sí misma
                 tile.children.unshift(item);
             } else {
-                currentLevel.splice(toIndex, 0, item);
+                currentLevel.splice(fromIndex, 0, item); // Reinsertar en su posición original si no es una carpeta válida
             }
             saveAndRender(); // Assumes global function
         });

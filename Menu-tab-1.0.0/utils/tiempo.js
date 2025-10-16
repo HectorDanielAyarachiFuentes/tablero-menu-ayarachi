@@ -1,6 +1,10 @@
-import { $, storageGet, storageSet, saveAndSyncSetting } from '../menubar/utils.js';
-import { showSettingError } from '../menubar/ui.js';
-import { API_URLS } from '../menubar/config.js';
+/**
+ * Gestiona la obtención y renderizado de la información del clima.
+ * Puede obtener el clima por geolocalización o por una ciudad especificada por el usuario.
+ */
+import { $, storageGet, storageSet, saveAndSyncSetting } from '../menubar/core/utils.js';
+import { showSettingError } from '../menubar/components/ui.js';
+import { API_URLS } from '../menubar/core/config.js';
 
 export const WeatherManager = {
     init() {

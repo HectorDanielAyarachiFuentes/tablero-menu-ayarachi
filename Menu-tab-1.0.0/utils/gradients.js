@@ -1,3 +1,7 @@
+/**
+ * Define la lista de todos los degradados disponibles en la aplicación,
+ * así como una paleta de colores por defecto para aquellos que no tienen una personalizada.
+ */
 // Colores por defecto para los degradados que no tienen una paleta personalizada.
 // Puedes ajustar estos colores para que se adapten a la mayoría de los degradados.
 export const DEFAULT_GRADIENT_COLORS = {

@@ -1,3 +1,7 @@
+/**
+ * Archivo de configuración central.
+ * Define constantes utilizadas en toda la aplicación, como las claves de almacenamiento y las URLs de APIs.
+ */
 export const STORAGE_KEYS = [
   'tiles',
   'engine',

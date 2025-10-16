@@ -1,3 +1,7 @@
+/**
+ * Una pequeña librería de utilidad para usar IndexedDB como un simple almacén de clave-valor.
+ * Proporciona una API basada en promesas (get, set, etc.) para facilitar su uso.
+ */
 function promisifyRequest(request) {
     return new Promise((resolve, reject) => {
         request.oncomplete = request.onsuccess = () => resolve(request.result);

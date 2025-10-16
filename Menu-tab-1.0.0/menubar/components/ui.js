@@ -1,7 +1,14 @@
-import { $, $$, saveAndSyncSetting, storageGet } from './utils.js';
-import { FolderManager } from './carpetas.js';
-import { renderTiles, saveAndRender, tiles, trash, closeModal, setTiles, setTrash } from './tiles.js';
-import { FileSystem } from './file-system.js';
+/**
+ * Gestiona las interacciones generales de la interfaz de usuario (UI).
+ * Se encarga de abrir/cerrar paneles (configuración, notas), actualizar el reloj y el saludo,
+ * y manejar los controles de apariencia de los paneles como color, opacidad y desenfoque.
+ */
+import { $, $$, saveAndSyncSetting, storageGet } from '../core/utils.js';
+import { FolderManager } from '../core/carpetas.js';
+import { renderTiles, saveAndRender, tiles, trash, setTiles, setTrash } from '../core/tiles.js';
+import { closeModal } from './modal.js';
+import { FileSystem } from '../system/file-system.js';
+import { initPanelSettings } from '../settings/settings-panels.js';
 
 export function initUI() {
     updateClock();
@@ -37,47 +44,7 @@ export function initUI() {
         saveAndSyncSetting({ userName: name });
     });
 
-    // --- Lógica para Paneles ---
-    const panelColorInput = $('#panelColor');
-    const panelColorValue = $('#panelColorValue');
-
-    panelColorInput.addEventListener('input', (e) => {
-        const color = e.target.value;
-        panelColorValue.value = color;
-        document.documentElement.style.setProperty('--panel-bg', color);
-        updatePanelRgb(color);
-    });
-    panelColorInput.addEventListener('change', (e) => saveAndSyncSetting({ panelBg: e.target.value }));
-
-    panelColorValue.addEventListener('change', (e) => {
-        const color = e.target.value;
-        panelColorInput.value = color;
-        panelColorInput.dispatchEvent(new Event('input'));
-        panelColorInput.dispatchEvent(new Event('change'));
-    });
-    $('#panelOpacity').addEventListener('input', (e) => {
-        document.documentElement.style.setProperty('--panel-opacity', e.target.value);
-        updateSliderValueSpans();
-    });
-    $('#panelOpacity').addEventListener('change', (e) => {
-        saveAndSyncSetting({ panelOpacity: parseFloat(e.target.value) });
-    });
-
-    $('#panelBlur').addEventListener('input', (e) => {
-        document.documentElement.style.setProperty('--panel-blur', `${e.target.value}px`);
-        updateSliderValueSpans();
-    });
-    $('#panelBlur').addEventListener('change', (e) => {
-        saveAndSyncSetting({ panelBlur: parseInt(e.target.value, 10) });
-    });
-
-    $('#panelRadius').addEventListener('input', (e) => {
-        document.documentElement.style.setProperty('--panel-radius', `${e.target.value}px`);
-        updateSliderValueSpans();
-    });
-    $('#panelRadius').addEventListener('change', (e) => {
-        saveAndSyncSetting({ panelRadius: parseInt(e.target.value, 10) });
-    });
+    initPanelSettings();
 
     $('#manualSaveBtn').addEventListener('click', async () => {
         await FileSystem.saveDataToFile({ tiles, trash });
@@ -90,10 +57,6 @@ export function initUI() {
             trash.length = 0; // Vacía el array
             saveAndRender();
         }
-    });
-
-    $('#resetPanelsBtn').addEventListener('click', async () => {
-        await resetPanelSettings();
     });
 
     // Listener para el botón en el banner de advertencia
@@ -139,12 +102,6 @@ export function updateClock() {
     const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const formattedDate = new Intl.DateTimeFormat('es-ES', dateOptions).format(now);
     $('#date').textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
-}
-
-export function updateSliderValueSpans() {
-    $('#opacityValue').textContent = `${Math.round($('#panelOpacity').value * 100)}%`;
-    $('#blurValue').textContent = `${$('#panelBlur').value}px`;
-    $('#radiusValue').textContent = `${$('#panelRadius').value}px`;
 }
 
 export function updateActiveThemeButton(theme) {
@@ -324,97 +281,4 @@ function showDataTabError(message, isPermissionError = false) {
 
     dataStatusEl.innerHTML = finalMessage;
     dataStatusEl.classList.add('visible', 'error');
-}
-
-export async function updateDataTabUI_old() {
-    const handle = await FileSystem.getDirectoryHandle(false); // No solicitar permiso, solo consultar
-    const permissionState = await FileSystem.getPermissionState();
-    const { autoSync } = await storageGet(['autoSync']);
-    const dirPathEl = $('#dirPath');
-    const selectDirBtn = $('#selectDirBtn');
-
-    if (handle) {
-        dirPathEl.hidden = false;
-        dirPathEl.classList.remove('warning');
-        selectDirBtn.textContent = 'Cambiar Carpeta';
-
-        if (permissionState === 'prompt') {
-            dirPathEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> <span>${handle.name} (Permiso requerido)</span>`;
-            dirPathEl.classList.add('warning');
-            selectDirBtn.textContent = 'Renovar Permiso de Acceso';
-            showPermissionWarningBanner(true); // Asegurarse de que el banner se muestre
-        } else {
-            dirPathEl.innerHTML = `<span>Carpeta activa: <b>${handle.name}</b></span>`;
-            showPermissionWarningBanner(false); // Ocultar el banner si el permiso está bien
-        }
-
-        $('#autoSyncToggle').disabled = false;
-        $('#autoSyncToggle').checked = autoSync || false;
-        $('#manualSaveBtn').hidden = autoSync || false;
-    } else {
-        dirPathEl.hidden = true;
-        selectDirBtn.textContent = 'Elegir Carpeta de Datos';
-        $('#autoSyncToggle').disabled = true;
-        $('#autoSyncToggle').checked = false;
-        $('#manualSaveBtn').hidden = true;
-    }
-}
-
-/**
- * Convierte un color hexadecimal a formato RGB y lo establece como una variable CSS.
- * @param {string} hex - El color en formato hexadecimal (ej. #RRGGBB).
- */
-export function updatePanelRgb(hex) {
-    if (!hex || !hex.startsWith('#')) return;
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
-        document.documentElement.style.setProperty('--panel-bg-rgb', `${r}, ${g}, ${b}`);
-    }
-}
-
-/**
- * Restablece la configuración de los paneles a sus valores predeterminados.
- */
-async function resetPanelSettings() {
-    // Importamos dinámicamente para evitar dependencias circulares
-    const { GRADIENTS, DEFAULT_GRADIENT_COLORS } = await import('../utils/gradients.js');
-
-    // Obtenemos el degradado actual para saber qué color de panel por defecto aplicar
-    const { gradient: currentGradientId } = await storageGet(['gradient']);
-    const currentGradient = GRADIENTS.find(g => g.id === currentGradientId);
-    
-    // Determinamos el color de panel por defecto basado en el degradado actual o un valor global
-    const defaultPanelColor = currentGradient?.cssVariables?.['--panel-bg'] || DEFAULT_GRADIENT_COLORS['--panel-bg'] || '#0e193a';
-
-    const defaults = {
-        panelBg: defaultPanelColor,
-        panelOpacity: 0.05,
-        panelBlur: 6,
-        panelRadius: 12
-    };
-
-    // Eliminar las configuraciones personalizadas del storage
-    await saveAndSyncSetting({
-        panelBg: null,
-        panelOpacity: null,
-        panelBlur: null,
-        panelRadius: null
-    });
-
-    // Aplicar valores por defecto a la UI y al DOM
-    $('#panelColor').value = defaults.panelBg;
-    $('#panelColorValue').value = defaults.panelBg;
-    $('#panelOpacity').value = defaults.panelOpacity;
-    $('#panelBlur').value = defaults.panelBlur;
-    $('#panelRadius').value = defaults.panelRadius;
-
-    document.documentElement.style.setProperty('--panel-bg', defaults.panelBg);
-    document.documentElement.style.setProperty('--panel-opacity', defaults.panelOpacity);
-    document.documentElement.style.setProperty('--panel-blur', `${defaults.panelBlur}px`);
-    document.documentElement.style.setProperty('--panel-radius', `${defaults.panelRadius}px`);
-    updatePanelRgb(defaults.panelBg);
-    updateSliderValueSpans();
-    showSaveStatus();
 }

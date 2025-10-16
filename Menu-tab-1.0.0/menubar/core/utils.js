@@ -1,5 +1,9 @@
-import { FileSystem } from './file-system.js';
-import { showSaveStatus } from './ui.js';
+/**
+ * Proporciona funciones de utilidad reutilizables en toda la aplicación.
+ * Incluye selectores de DOM, helpers para el almacenamiento y una función de guardado con debounce.
+ */
+import { FileSystem } from '../system/file-system.js';
+import { showSaveStatus } from '../components/ui.js';
 
 export const $ = s => document.querySelector(s);
 export const $$ = s => Array.from(document.querySelectorAll(s));

@@ -1,6 +1,8 @@
-// navegadores.js
-// Este archivo contiene ejemplos de cómo asegurar la compatibilidad de tu aplicación
-// en diferentes navegadores como Firefox y Opera.
+/**
+ * Este archivo contiene ejemplos y utilidades para asegurar la compatibilidad de la aplicación
+ * en diferentes navegadores como Firefox y Opera, utilizando técnicas como la detección
+ * de características y polyfills.
+ */
 
 (function() {
   'use strict';

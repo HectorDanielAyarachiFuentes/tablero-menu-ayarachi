@@ -1,3 +1,6 @@
+/**
+ * Define los objetos de configuración para los temas disponibles en la aplicación.
+ */
 export const THEMES = {
   'paisaje': {
     id: 'paisaje',

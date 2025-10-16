@@ -320,6 +320,10 @@ body.loading .tiles-section {
 .field > label{display:block;font-weight:600;font-size:15px;margin:0}
 .theme-list{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;}
 .editor{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.editor-search-container {
+  margin-bottom: 12px;
+}
+.editor-search-container input { width: 100%; }
 .editor .row{display:flex;gap:8px;align-items:center;padding:4px;border-radius:6px;border:1px solid transparent;cursor:grab}
 .editor .row.dragging{opacity:0.5}
 .editor .row.drag-over{border-color:var(--accent-color)}

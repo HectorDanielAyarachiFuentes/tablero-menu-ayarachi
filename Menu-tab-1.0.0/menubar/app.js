@@ -1,14 +1,23 @@
-import { $, storageGet, storageSet } from './utils.js';
-import { STORAGE_KEYS } from './config.js';
+/**
+ * Punto de entrada principal de la aplicación.
+ * Se encarga de inicializar todos los módulos, cargar la configuración inicial,
+ * y coordinar la renderización de los componentes principales.
+ */
+import { $, storageGet, storageSet } from './core/utils.js';
+import { STORAGE_KEYS } from './core/config.js';
 
-import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateSliderValueSpans, updateDataTabUI, updatePanelRgb, toggleSettings, switchToTab, showPermissionWarningBanner } from './ui.js';
-import { initTiles, renderTiles, tiles, setTiles, renderEditor, renderNotes, setTrash, renderTrash } from './tiles.js';
+import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateDataTabUI, toggleSettings, switchToTab, showPermissionWarningBanner } from './components/ui.js';
+import { updateSliderValueSpans, updatePanelRgb } from './settings/settings-panels.js';
+import { initTiles, renderTiles, tiles, setTiles, setTrash } from './core/tiles.js';
+import { renderNotes } from './components/notes.js';
+import { renderEditor } from './settings/editor.js';
+import { renderTrash } from './components/trash.js';
 import { initSearch, renderFavoritesInSelect } from '../utils/search.js';
-import { initSettings, loadGradients, applyTheme, applyGradient, applyBackgroundStyles } from './settings.js';
+import { initSettings, loadGradients, applyGradient, applyBackgroundStyles } from './settings/settings.js';
 import { GRADIENTS } from '../utils/gradients.js';
 import { WeatherManager } from '../utils/tiempo.js';
-import { DOODLES, initDoodleSettings, updateDoodleSelectionUI } from './doodles.js';
-import { FileSystem } from './file-system.js';
+import { DOODLES, initDoodleSettings, updateDoodleSelectionUI } from './settings/doodles.js';
+import { FileSystem } from './system/file-system.js';
 
 
 let currentBackgroundValue = '';
@@ -220,7 +229,6 @@ export async function updateBackground() {
 
   // Actualizar siempre la UI de la configuración
   updateActiveGradientButton(settings.gradient);
-  updateActiveThemeButton(null); // Ya no hay temas
   updateDoodleSelectionUI(doodleId);
 }
 

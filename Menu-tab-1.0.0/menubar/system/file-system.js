@@ -1,6 +1,10 @@
-import { storageGet, storageSet } from './utils.js';
-import { STORAGE_KEYS } from './config.js';
-import { showFileError, showSaveStatus, updateDataTabUI } from './ui.js';
+/**
+ * Abstrae la interacción con el sistema de archivos local del usuario mediante la File System Access API.
+ * Gestiona la selección de directorios, y la lectura/escritura de datos de la aplicación en un archivo.
+ */
+import { storageGet, storageSet } from '../core/utils.js';
+import { STORAGE_KEYS } from '../core/config.js';
+import { showFileError, showSaveStatus, updateDataTabUI } from '../components/ui.js';
 
 const FILE_NAME = 'tablero-data.json';
 let dirHandle = null;
@@ -14,7 +18,7 @@ let fsWorkerInstance = null;
 function getWorker() {
     if (!fsWorkerInstance) {
         // Usamos la ruta absoluta desde la raíz de la extensión.
-        fsWorkerInstance = new Worker('/menubar/file-worker.js', { type: 'module' });
+        fsWorkerInstance = new Worker('/menubar/system/file-worker.js', { type: 'module' });
     }
     return fsWorkerInstance;
 }
@@ -90,7 +94,7 @@ export const FileSystem = {
      */
     async saveDataToFile(dataToSave) {
         // Importamos dinámicamente para evitar dependencias circulares y obtener el estado más reciente.
-        const { tiles, trash } = await import('./tiles.js');
+        const { tiles, trash } = await import('../core/tiles.js');
 
         // Obtenemos TODAS las configuraciones, no solo las de STORAGE_KEYS, para asegurarnos de capturar 'weather'.
         const allSettings = await storageGet(null); 
@@ -176,7 +180,7 @@ export const FileSystem = {
 };
 
 // --- IndexedDB Helpers para guardar el handle ---
-import { get, set } from '/menubar/idb-keyval.js';
+import { get, set } from '/menubar/lib/idb-keyval.js';
 
 /**
  * Verifica y, si es necesario, solicita permiso para un handle de archivo/directorio.

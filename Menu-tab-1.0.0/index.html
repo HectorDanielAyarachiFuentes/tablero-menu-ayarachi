@@ -147,8 +147,14 @@
       <div class="tab-pane active" id="tab-accesos">
         <div class="field">
           <label>Gestionar Accesos</label>
+          <div class="editor-search-container">
+            <input id="editorSearchInput" placeholder="Buscar accesos por nombre o URL..." />
+          </div>
           <div id="editor" class="editor"></div>
-          <button id="addTile" class="btn primary full-width">+ Añadir acceso</button>
+          <div class="button-group">
+            <button id="addTile" class="btn primary">+ Añadir acceso</button>
+            <button id="addFolder" class="btn">+ Añadir carpeta</button>
+          </div>
         </div>
       </div>
       <!-- Tab: General -->

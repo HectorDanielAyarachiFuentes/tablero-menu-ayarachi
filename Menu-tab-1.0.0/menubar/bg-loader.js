@@ -6,9 +6,6 @@
 // Usamos una IIFE asíncrona para poder usar await
 (async () => {
   try {
-    // Importamos dinámicamente el módulo de temas
-    // const { THEMES } = await import('./themes-config.js'); // No más temas
-
     // Colores por defecto para los degradados, para evitar FOUC si se selecciona un degradado sin paleta.
     const DEFAULT_GRADIENT_COLORS = {
       '--text-color': '#e0e0e0',

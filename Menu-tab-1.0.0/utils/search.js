@@ -1,5 +1,9 @@
-import { $, storageGet, storageSet } from '../menubar/utils.js';
-import { tiles } from '../menubar/tiles.js';
+/**
+ * Gestiona la funcionalidad de la barra de búsqueda.
+ * Incluye la lógica para realizar búsquedas y para el selector de motores de búsqueda y favoritos.
+ */
+import { $, storageGet, storageSet } from '../menubar/core/utils.js';
+import { tiles } from '../menubar/core/tiles.js';
 
 export function initSearch() {
     $('#searchGo').addEventListener('click', performSearch);

@@ -1,6 +1,6 @@
 import { storageGet, storageSet } from './utils.js';
 import { STORAGE_KEYS } from './config.js';
-import { showFileError, showSaveStatus } from './ui.js';
+import { showFileError, showSaveStatus, updateDataTabUI } from './ui.js';
 
 const FILE_NAME = 'tablero-data.json';
 let dirHandle = null;
@@ -28,13 +28,15 @@ export const FileSystem = {
      * Solicita al usuario que seleccione un directorio para almacenar los datos.
      * Guarda el handle del directorio en IndexedDB para persistencia.
      */
-    async selectDirectory() {
+    async selectDirectory(options = {}) {
         if (!window.showDirectoryPicker) {
             alert('Tu navegador no soporta la API de Acceso al Sistema de Archivos. Prueba con Chrome, Edge o Opera.');
-            return;
+            return null;
         }
         try {
-            const handle = await window.showDirectoryPicker();
+            // Usamos las opciones para, por ejemplo, sugerir la carpeta anterior.
+            // Esto mejora la experiencia al renovar permisos.
+            const handle = await window.showDirectoryPicker(options);
             await set('dirHandle', handle);
             dirHandle = handle;
             console.log('Directorio seleccionado y guardado:', handle.name);
@@ -49,10 +51,12 @@ export const FileSystem = {
             console.log('Archivo de datos inicial creado en el hilo principal.');
 
             showSaveStatus();
+            return handle;
         } catch (err) {
             if (err.name !== 'AbortError') {
                 console.error('Error al seleccionar el directorio:', err);
             }
+            return null;
         }
     },
 
@@ -154,6 +158,20 @@ export const FileSystem = {
             return dirHandle;
         }
         return null;
+    },
+
+    /**
+     * Consulta el estado actual del permiso para el handle del directorio guardado.
+     * No solicita permiso, solo informa.
+     * @returns {Promise<PermissionState|null>} 'granted', 'prompt', 'denied', o null si no hay handle.
+     */
+    async getPermissionState() {
+        const handleFromDB = await get('dirHandle');
+        if (!handleFromDB) {
+            return null;
+        }
+        const options = { mode: 'readwrite' };
+        return await handleFromDB.queryPermission(options);
     }
 };
 
@@ -182,7 +200,10 @@ async function verifyPermission(fileHandle, withRequest = false) {
     // Si llegamos aquí, es porque el permiso es 'prompt' (y no se solicitó) o 'denied'.
     if (await fileHandle.queryPermission(options) === 'prompt') {
         console.log('File system permission status is "prompt". The user must re-select the directory via a user action to re-grant permission.');
-        showFileError('Permiso de acceso a carpeta denegado.', true);
+        // En lugar de mostrar un error global, simplemente actualizamos la UI de la pestaña de datos,
+        // que ahora tiene su propio manejador de errores visual.
+        // Esto hace que el error aparezca en el contexto correcto.
+        updateDataTabUI();
     }
     return false;
 }

@@ -27,21 +27,8 @@ export function initUI() {
         }
     });
 
-    const tabButtons = $$('.tab-btn');
-    const tabPanes = $$('.tab-pane');
-    tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            tabButtons.forEach(b => b.classList.remove('active'));
-            tabPanes.forEach(pane => {
-                pane.classList.remove('active');
-                pane.style.display = 'none'; // Ocultar para la animación
-            });
-
-            btn.classList.add('active');
-            const activePane = $(`#tab-${btn.dataset.tab}`);
-            activePane.style.display = 'block';
-            setTimeout(() => activePane.classList.add('active'), 10); // Permitir que se aplique display:block
-        });
+    $$('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchToTab(btn.dataset.tab));
     });
 
     $('#userName').addEventListener('input', (e) => {
@@ -108,6 +95,31 @@ export function initUI() {
     $('#resetPanelsBtn').addEventListener('click', async () => {
         await resetPanelSettings();
     });
+
+    // Listener para el botón en el banner de advertencia
+    $('#renewPermissionBtn').addEventListener('click', () => {
+        toggleSettings(true);
+        switchToTab('datos');
+    });
+}
+
+/**
+ * Cambia a una pestaña específica en el panel de configuración.
+ * @param {string} tabId - El ID de la pestaña a activar (ej. 'datos', 'general').
+ */
+export function switchToTab(tabId) {
+    const tabButtons = $$('.tab-btn');
+    const tabPanes = $$('.tab-pane');
+    tabButtons.forEach(b => b.classList.remove('active'));
+    tabPanes.forEach(pane => {
+        pane.classList.remove('active');
+        pane.style.display = 'none'; // Ocultar para la animación
+    });
+    const btnToActivate = $(`.tab-btn[data-tab="${tabId}"]`);
+    const paneToActivate = $(`#tab-${tabId}`);
+    if (btnToActivate) btnToActivate.classList.add('active');
+    if (paneToActivate) paneToActivate.style.display = 'block';
+    setTimeout(() => paneToActivate?.classList.add('active'), 10); // Permitir que se aplique display:block
 }
 
 export function renderGreeting(name) {
@@ -178,6 +190,21 @@ export function toggleNotesPanel(show) {
     updateMainBlur();
 }
 
+/**
+ * Muestra u oculta el banner de advertencia de permisos.
+ * @param {boolean} show - True para mostrar, false para ocultar.
+ */
+export function showPermissionWarningBanner(show) {
+    const banner = $('#permission-banner');
+    if (show) {
+        banner.hidden = false;
+        banner.classList.add('visible');
+    } else {
+        banner.classList.remove('visible');
+        banner.hidden = true;
+    }
+}
+
 function updateMainBlur() {
     $('.main').classList.toggle('blurred', !!($('#settings[aria-hidden="false"]') || $('#notes-panel[aria-hidden="false"]')));
 }
@@ -223,31 +250,110 @@ export function showFileError(message, isPermissionError = false) {
     if (!saveStatus) return;
 
     if (saveStatus.timeout) clearTimeout(saveStatus.timeout);
-    
+
     let finalMessage = message;
     if (isPermissionError) {
         finalMessage += ` <button id="reselectDirFromError" class="btn-link" style="text-decoration: underline; background: none; border: none; color: inherit; cursor: pointer; padding: 0; font-size: inherit;">Re-seleccionar carpeta</button>`;
     }
+
+    // Añadimos un ícono de cerrar para que el usuario pueda descartar el mensaje si lo desea.
+    // Esto es útil si el usuario no quiere re-seleccionar la carpeta en ese momento.
+    const closeIconHTML = `<img src="images/cerrar.svg" alt="Ícono de cerrar" style="width: 16px; height: 16px; cursor: pointer; vertical-align: middle; margin-left: 8px;" onclick="this.parentElement.style.opacity = '0'; setTimeout(() => this.parentElement.classList.remove('visible', 'error'), 300);">`;
+
+    finalMessage += closeIconHTML;
 
     saveStatus.innerHTML = finalMessage;
     saveStatus.classList.add('error');
     saveStatus.style.opacity = '1';
 }
 export async function updateDataTabUI() {
-    const handle = await FileSystem.getDirectoryHandle();
-    const { autoSync } = await storageGet(['autoSync']);
+    const dataStatusEl = $('#data-status');
+    const handle = await FileSystem.getDirectoryHandle(false); // No solicitar permiso, solo consultar
+    const permissionState = await FileSystem.getPermissionState();
+    const { autoSync, hideWarning } = await storageGet(['autoSync', 'hideWarning']);
+    const dirPathEl = $('#dirPath');
+    const selectDirBtn = $('#selectDirBtn');
+
+    // Ocultar el contenedor de estado por defecto
+    dataStatusEl.classList.remove('visible', 'error');
 
     if (handle) {
-        $('#dirPath').textContent = `Carpeta seleccionada: ${handle.name}`;
-        $('#dirInfo').hidden = true;
-        $('#dirPath').hidden = false;
+        dirPathEl.hidden = false;
+        dirPathEl.classList.remove('warning');
+        selectDirBtn.textContent = 'Cambiar Carpeta';
+
+        if (permissionState === 'prompt') {
+            showDataTabError('Permiso de acceso a carpeta denegado.', true);
+            selectDirBtn.textContent = 'Renovar Permiso';
+            if (!hideWarning) {
+                showPermissionWarningBanner(true); // Asegurarse de que el banner se muestre si no está desactivado
+            }
+        } else {
+            dirPathEl.innerHTML = `<span>Carpeta activa: <b>${handle.name}</b></span>`;
+            showPermissionWarningBanner(false); // Ocultar el banner si el permiso está bien
+        }
+
         $('#autoSyncToggle').disabled = false;
         $('#autoSyncToggle').checked = autoSync || false;
         $('#manualSaveBtn').hidden = autoSync || false;
     } else {
-        $('#dirPath').hidden = true;
-        // Si hay un handle guardado pero no tenemos permiso, mostramos un mensaje de ayuda.
-        $('#dirInfo').hidden = !(await storageGet('dirHandle')).dirHandle;
+        dirPathEl.hidden = true;
+        selectDirBtn.textContent = 'Elegir Carpeta de Datos';
+        $('#autoSyncToggle').disabled = true;
+        $('#autoSyncToggle').checked = false;
+        $('#manualSaveBtn').hidden = true;
+    }
+    $('#hideWarningToggle').checked = hideWarning || false;
+}
+
+/**
+ * Muestra un mensaje de error dentro de la pestaña de Datos.
+ * @param {string} message - El mensaje de error a mostrar.
+ * @param {boolean} isPermissionError - Si es true, añade un botón para re-seleccionar el directorio.
+ */
+function showDataTabError(message, isPermissionError = false) {
+    const dataStatusEl = $('#data-status');
+    if (!dataStatusEl) return;
+
+    let finalMessage = message;
+    if (isPermissionError) {
+        finalMessage = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span>${message}</span>
+        <button id="reselectDirFromError" class="btn-link" style="text-decoration: underline; background: none; border: none; color: inherit; cursor: pointer; padding: 0; font-size: inherit; margin-left: auto;">Re-seleccionar</button>`;
+    }
+
+    dataStatusEl.innerHTML = finalMessage;
+    dataStatusEl.classList.add('visible', 'error');
+}
+
+export async function updateDataTabUI_old() {
+    const handle = await FileSystem.getDirectoryHandle(false); // No solicitar permiso, solo consultar
+    const permissionState = await FileSystem.getPermissionState();
+    const { autoSync } = await storageGet(['autoSync']);
+    const dirPathEl = $('#dirPath');
+    const selectDirBtn = $('#selectDirBtn');
+
+    if (handle) {
+        dirPathEl.hidden = false;
+        dirPathEl.classList.remove('warning');
+        selectDirBtn.textContent = 'Cambiar Carpeta';
+
+        if (permissionState === 'prompt') {
+            dirPathEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> <span>${handle.name} (Permiso requerido)</span>`;
+            dirPathEl.classList.add('warning');
+            selectDirBtn.textContent = 'Renovar Permiso de Acceso';
+            showPermissionWarningBanner(true); // Asegurarse de que el banner se muestre
+        } else {
+            dirPathEl.innerHTML = `<span>Carpeta activa: <b>${handle.name}</b></span>`;
+            showPermissionWarningBanner(false); // Ocultar el banner si el permiso está bien
+        }
+
+        $('#autoSyncToggle').disabled = false;
+        $('#autoSyncToggle').checked = autoSync || false;
+        $('#manualSaveBtn').hidden = autoSync || false;
+    } else {
+        dirPathEl.hidden = true;
+        selectDirBtn.textContent = 'Elegir Carpeta de Datos';
         $('#autoSyncToggle').disabled = true;
         $('#autoSyncToggle').checked = false;
         $('#manualSaveBtn').hidden = true;

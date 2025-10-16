@@ -27,6 +27,15 @@
       </div>
     </header>
 
+    <!-- Banner de Advertencia de Permisos -->
+    <div id="permission-banner" class="permission-banner" hidden>
+      <div class="permission-banner-content">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span>La sincronización automática está pausada. El navegador requiere que renueves el permiso de acceso a la carpeta.</span>
+        <button id="renewPermissionBtn" class="btn btn-small">Reactivar Sincronización</button>
+      </div>
+    </div>
+
     <main id="main-content" class="main">
       <section class="top-content">
         <!-- El saludo y la hora se movieron a la cabecera -->
@@ -242,25 +251,49 @@
       </div>
       <!-- Tab: Datos -->
       <div class="tab-pane" id="tab-datos">
-        <div class="field local-storage-field">
-          <label>Almacenamiento Local de Datos</label>
-          <p class="field-description">Guarda tus datos de forma segura en un archivo en tu propia computadora. Esto te da control total, privacidad y acceso sin conexión. Se recomienda elegir una carpeta en "Mis Documentos".</p>
-          <div class="button-group vertical">
-            <button id="selectDirBtn" class="btn primary">Elegir Carpeta de Datos</button>
+        <div class="data-section">
+          <h4>Sincronización Local</h4>
+          <!-- Contenedor para el estado de la sincronización y errores -->
+          <div id="data-status" class="data-status-container"></div>
+          <div class="field">
+            <div id="dirPath" class="dir-path" hidden></div>
+            <div class="button-group">
+              <button id="selectDirBtn" class="btn primary">Elegir Carpeta</button>
+            </div>
+            <p class="field-description">
+              Guarda una copia de seguridad de tus datos en una carpeta de tu computadora para tener control total y acceso sin conexión.
+            </p>
           </div>
-          <div id="dirInfo" class="dir-path info" hidden>Para reactivar la sincronización, por favor, selecciona la carpeta de nuevo. El navegador requiere este paso por seguridad.</div>
-          <div id="dirPath" class="dir-path" hidden></div>
+
+          <div class="field field-toggle">
+            <label for="autoSyncToggle">Sincronización Automática</label>
+            <div class="switch-container">
+              <label class="switch"><input type="checkbox" id="autoSyncToggle" disabled><span class="slider round"></span></label>
+            </div>
+            <p class="field-description">Guarda los cambios automáticamente en el archivo local.</p>
+            <button id="manualSaveBtn" class="btn" hidden>Guardar Cambios Manualmente</button>
+          </div>
+          <div class="field">
+            <label>Aviso de Permisos</label>
+            <p class="field-description">
+              Por tu seguridad, el navegador requiere que renueves el permiso de acceso a la carpeta cada vez que se reinicia. Puedes ocultar el aviso si lo deseas.
+            </p>
+          </div>
+          <div class="field field-toggle">
+            <label for="hideWarningToggle">Ocultar aviso al iniciar</label>
+            <div class="switch-container">
+              <label class="switch"><input type="checkbox" id="hideWarningToggle"><span class="slider round"></span></label>
+            </div>
+            <p class="field-description">Oculta el banner naranja que aparece si se pierde el permiso de la carpeta.</p>
+          </div>
         </div>
-        <div class="field field-toggle">
-          <label for="autoSyncToggle">Sincronización Automática</label>
-          <div class="switch-container">
-            <label class="switch">
-              <input type="checkbox" id="autoSyncToggle" disabled>
-              <span class="slider round"></span>
-            </label>
+        <div class="data-section">
+          <h4>Importar y Exportar</h4>
+          <p class="field-description">Crea una copia de seguridad de toda tu configuración o restáurala desde un archivo JSON.</p>
+          <div class="button-group">
+            <button id="importJsonBtn" class="btn">Importar JSON</button>
+            <button id="exportJsonBtn" class="btn primary">Exportar JSON</button>
           </div>
-          <p class="field-description">Cuando está activado, todos los cambios se guardan automáticamente en el archivo local. Si está desactivado, deberás guardar manualmente.</p>
-          <button id="manualSaveBtn" class="btn" hidden>Guardar Cambios Manualmente</button>
         </div>
       </div>
       <!-- Tab: Papelera -->
@@ -375,7 +408,17 @@
     </ul>
   </div>
 
-  <template id="tileTpl"> <div class="tile" draggable="true"> <img class="thumb" width="56" height="56" alt=""> <div class="info"> <div class="title"></div> <div class="url"></div> </div> <div class="actions"> <button class="more-btn" aria-label="Más opciones para este acceso"> <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg> </button> </div> </div> </template>
+  <template id="tileTpl">
+    <div class="tile" draggable="true">
+      <!-- CAMBIO: Se añade el atributo onerror. Si el ícono de Google falla (404), se reemplaza por un ícono genérico local. -->
+      <img class="thumb" width="56" height="56" alt="" onerror="this.onerror=null; this.src='icons/icon_link.svg';">
+      <div class="info">
+        <div class="title"></div>
+        <div class="url"></div>
+      </div>
+      <div class="actions"> <button class="more-btn" aria-label="Más opciones para este acceso"> <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg> </button> </div>
+    </div>
+  </template>
 
   <script src="menubar/app.js" type="module"></script>
   <script src="doodle/css-doodle.min.js"></script>

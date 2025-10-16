@@ -1,7 +1,7 @@
 import { $, storageGet, storageSet } from './utils.js';
 import { STORAGE_KEYS } from './config.js';
 
-import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateSliderValueSpans, updateDataTabUI, updatePanelRgb } from './ui.js';
+import { initUI, renderGreeting, updateActiveThemeButton, updateActiveGradientButton, updateSliderValueSpans, updateDataTabUI, updatePanelRgb, toggleSettings, switchToTab, showPermissionWarningBanner } from './ui.js';
 import { initTiles, renderTiles, tiles, setTiles, renderEditor, renderNotes, setTrash, renderTrash } from './tiles.js';
 import { initSearch, renderFavoritesInSelect } from '../utils/search.js';
 import { initSettings, loadGradients, applyTheme, applyGradient, applyBackgroundStyles } from './settings.js';
@@ -54,6 +54,8 @@ async function init(){
     const syncedSettings = await storageGet(STORAGE_KEYS, false);
     await applySettings(syncedSettings, true);
   }
+
+  checkPermissionsOnLoad();
 }
 
 async function applySettings(settings, isUpdate = false) {
@@ -219,6 +221,22 @@ export async function updateBackground() {
   updateActiveGradientButton(settings.gradient);
   updateActiveThemeButton(null); // Ya no hay temas
   updateDoodleSelectionUI(doodleId);
+}
+
+/**
+ * Verifica los permisos del sistema de archivos al cargar la aplicación.
+ * Si el permiso se ha perdido (estado 'prompt'), muestra un banner de advertencia.
+ */
+async function checkPermissionsOnLoad() {
+  const { hideWarning } = await storageGet(['hideWarning']);
+  if (hideWarning) return; // El usuario no quiere ver el aviso.
+
+  const permissionStatus = await FileSystem.getPermissionState();
+  // Si el permiso está en 'prompt', significa que se perdió y debe ser re-otorgado.
+  if (permissionStatus === 'prompt') {
+    console.log('Permiso de archivo perdido. Mostrando banner de advertencia.');
+    showPermissionWarningBanner(true);
+  }
 }
 
 init();

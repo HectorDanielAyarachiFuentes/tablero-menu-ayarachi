@@ -6,7 +6,7 @@
 import { $, $$, saveAndSyncSetting, storageGet } from '../core/utils.js';
 import { FolderManager } from '../core/carpetas.js';
 import { renderTiles, saveAndRender, tiles, trash, setTiles, setTrash } from '../core/tiles.js';
-import { closeModal } from './modal.js';
+import { closeModal } from './modal.js'; 
 import { FileSystem } from '../system/file-system.js';
 import { initPanelSettings } from '../settings/settings-panels.js';
 

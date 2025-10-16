@@ -117,7 +117,6 @@ async function applySettings(settings, isUpdate = false) {
   document.documentElement.style.setProperty('--panel-radius', `${panelRadius}px`);
   updatePanelRgb(panelBg); // Asegura que el valor RGB se actualice para la opacidad
   $('#panelColor').value = panelBg;
-  $('#panelColorValue').value = panelBg;
   $('#panelOpacity').value = panelOpacity;
   $('#panelBlur').value = panelBlur;
   $('#panelRadius').value = panelRadius;

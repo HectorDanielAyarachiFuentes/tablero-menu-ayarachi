@@ -45,8 +45,12 @@ export function initSettings(initialState) {
     });
     updateBgModeUI(initialState.isCustomBg, initialState.bgDisplayMode);
     $('#randomBgToggle').checked = initialState.randomBg || false;
-    $('#randomBgToggle').addEventListener('change', (e) => {
+    $('#randomBgToggle').addEventListener('change', (e) => { // CAMBIO: El texto de la etiqueta se cambió en el HTML
         storageSet({ randomBg: e.target.checked }).then(showSaveStatus);
+    });
+
+    $$('#tab-fondo .sub-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchToBackgroundSubTab(btn.dataset.subtab));
     });
 
     // --- Nueva lógica para la pestaña de Datos ---
@@ -120,6 +124,24 @@ export function initSettings(initialState) {
         importInput.addEventListener('change', handleImport);
         document.body.appendChild(importInput);
     }
+}
+
+/**
+ * Cambia entre las sub-pestañas de la sección "Fondo".
+ * @param {string} subTabId - El ID de la sub-pestaña a activar (ej. 'degradados', 'imagen').
+ */
+function switchToBackgroundSubTab(subTabId) {
+    // Ocultar todos los paneles y desactivar todos los botones de la pestaña Fondo
+    $$('#tab-fondo .sub-tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+    });
+    $$('#tab-fondo .sub-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Activar el panel y el botón correctos
+    $(`#subtab-${subTabId}`).classList.add('active');
+    $(`.sub-tab-btn[data-subtab="${subTabId}"]`).classList.add('active');
 }
 
 export async function loadGradients(activeGradient) {

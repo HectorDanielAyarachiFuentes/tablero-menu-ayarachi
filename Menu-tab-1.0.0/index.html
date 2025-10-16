@@ -170,35 +170,47 @@
       </div>
       <!-- Tab: Fondo -->
       <div class="tab-pane" id="tab-fondo">
-        <div class="field">
-          <label>Degradados</label>
-          <div id="gradient-list" class="gradient-list">
-            <!-- Los degradados se cargarán aquí desde JS -->
+        <div class="sub-tabs">
+          <button class="sub-tab-btn active" data-subtab="degradados">Degradados</button>
+          <button class="sub-tab-btn" data-subtab="imagen">Imagen</button>
+        </div>
+        <div class="sub-tab-content">
+          <!-- Sub-tab: Degradados -->
+          <div class="sub-tab-pane active" id="subtab-degradados">
+            <div class="field">
+              <label>Degradados</label>
+              <div id="gradient-list" class="gradient-list">
+                <!-- Los degradados se cargarán aquí desde JS -->
+              </div>
+            </div>
+            <div class="field field-toggle">
+              <label for="randomBgToggle">Degradado aleatorio en cada pestaña</label>
+              <div class="switch-container">
+                <label class="switch">
+                  <input type="checkbox" id="randomBgToggle">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="field">
-          <label for="bgUrl">Fondo Personalizado</label>
-          <input id="bgUrl" placeholder="Pega una URL de imagen para verla al instante" />
-          <div class="or">o</div>
-          <label for="bgFile" class="btn file-label">Subir imagen</label>
-          <input id="bgFile" type="file" accept="image/*" hidden/>
-        </div>
-        <div class="field" id="bgDisplayMode" hidden>
-          <label>Modo de visualización de imagen</label>
-          <div class="button-group" id="bgModeSelector">
-            <button class="btn" data-mode="cover">Rellenar</button>
-            <button class="btn" data-mode="contain">Ajustar</button>
-            <button class="btn" data-mode="stretch">Estirar</button>
-            <button class="btn" data-mode="center">Centrar</button>
-          </div>
-        </div>
-        <div class="field field-toggle">
-          <label for="randomBgToggle">Fondo aleatorio en cada pestaña</label>
-          <div class="switch-container">
-            <label class="switch">
-              <input type="checkbox" id="randomBgToggle">
-              <span class="slider round"></span>
-            </label>
+          <!-- Sub-tab: Imagen -->
+          <div class="sub-tab-pane" id="subtab-imagen">
+            <div class="field">
+              <label for="bgUrl">Fondo Personalizado</label>
+              <input id="bgUrl" placeholder="Pega una URL de imagen para verla al instante" />
+              <div class="or">o</div>
+              <label for="bgFile" class="btn file-label">Subir imagen</label>
+              <input id="bgFile" type="file" accept="image/*" hidden/>
+            </div>
+            <div class="field" id="bgDisplayMode" hidden> <!-- ESTO SE MOVIÓ AQUÍ -->
+              <label>Modo de visualización de imagen</label>
+              <div class="button-group" id="bgModeSelector">
+                <button class="btn" data-mode="cover">Rellenar</button>
+                <button class="btn" data-mode="contain">Ajustar</button>
+                <button class="btn" data-mode="stretch">Estirar</button>
+                <button class="btn" data-mode="center">Centrar</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

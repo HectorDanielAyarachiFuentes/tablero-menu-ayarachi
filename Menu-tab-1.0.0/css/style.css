@@ -14,7 +14,8 @@
 
 font-family: 'Poppins', sans-serif;
 }
-*{box-sizing:border-box}html{background:#07102a;}
+*{box-sizing:border-box}html{background:#000;}
+
 body{color:var(--panel-text-color);
   height:100%;margin:0;background-image:var(--bg-image);color:var(--text-color); transition: background-image .4s ease-in-out, color .4s ease-in-out;
   background-size: cover;

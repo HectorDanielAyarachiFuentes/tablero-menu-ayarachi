@@ -98,8 +98,6 @@ async function applySettings(settings, isUpdate = false) {
   renderGreeting(settings.userName);
   renderFavoritesInSelect();
 
-  await updateBackground();
-
   const panelBg = settings.panelBg || '#0e193a';
   const panelOpacity = settings.panelOpacity ?? 0.05;
   const panelBlur = settings.panelBlur ?? 6;
@@ -136,6 +134,9 @@ async function applySettings(settings, isUpdate = false) {
       isCustomBg: !!(settings.bgData || settings.bgUrl)
     }); 
     await initDoodleSettings(settings.doodle || 'none');
+
+    // Movemos la actualización del fondo aquí para asegurar que los doodles ya estén inicializados.
+    await updateBackground();
 
     WeatherManager.init();
     setInterval(WeatherManager.fetchAndRender, 1800000); // Actualiza el clima cada 30 minutos

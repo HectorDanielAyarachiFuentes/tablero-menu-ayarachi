@@ -56,6 +56,14 @@
         return;
       }
 
+      // Prioridad 1: Doodle. Si hay un doodle, no aplicamos ningún otro fondo de imagen o degradado.
+      if (settings.doodle && settings.doodle !== 'none') {
+        // No podemos renderizar el doodle aquí porque el componente <css-doodle> aún no está listo,
+        // pero sí podemos aplicar los colores base para evitar FOUC de texto.
+        applyGradientVariables();
+        return; // Salimos para que app.js se encargue de renderizar el doodle.
+      }
+
       // Solo aplicar fondo aleatorio si NO hay un fondo específico (URL, datos, gradiente o tema) guardado.
       // Esto previene que el fondo aleatorio sobreescriba una selección guardada durante la carga inicial.
       const hasSpecificBackground = settings.bgData || settings.bgUrl || settings.gradient;
@@ -80,7 +88,7 @@
     };
 
     // Leemos la configuración desde chrome.storage
-    const keys = ['bgData', 'bgUrl', 'gradient', 'randomBg', 'bgDisplayMode', 'panelBg', 'panelOpacity', 'panelBlur', 'panelRadius'];
+    const keys = ['doodle', 'bgData', 'bgUrl', 'gradient', 'randomBg', 'bgDisplayMode', 'panelBg', 'panelOpacity', 'panelBlur', 'panelRadius'];
     const settings = await new Promise(resolve => (chrome.storage.sync || chrome.storage.local).get(keys, resolve));
 
     // Aplicar estilos de panel de forma temprana para evitar FOUC

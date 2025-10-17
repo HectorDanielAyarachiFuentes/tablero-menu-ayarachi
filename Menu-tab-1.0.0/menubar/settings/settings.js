@@ -223,6 +223,30 @@ export function initSettings(initialState) {
         });
         saveAndSyncSetting(settingsToSave);
     });
+
+    // --- Lógica para la pestaña General (Tipografía) ---
+    const textFonts = {
+        greetingFont: { cssVar: '--greeting-font' },
+        dateFont: { cssVar: '--date-font' }
+    };
+
+    // Cargar fuentes iniciales
+    storageGet(Object.keys(textFonts)).then(settings => {
+        Object.entries(textFonts).forEach(([key, { cssVar }]) => {
+            const font = settings[key] || '\'Poppins\', sans-serif';
+            $(`#${key}`).value = font;
+            document.documentElement.style.setProperty(cssVar, font);
+        });
+    });
+
+    // Listeners para los selectores de fuente
+    Object.entries(textFonts).forEach(([key, { cssVar }]) => {
+        $(`#${key}`).addEventListener('change', (e) => {
+            const font = e.target.value;
+            document.documentElement.style.setProperty(cssVar, font);
+            saveAndSyncSetting({ [key]: font });
+        });
+    });
 }
 
 /**
@@ -474,5 +498,16 @@ export function applyTextColors(settings) {
     Object.entries(textColors).forEach(([key, cssVar]) => {
         const color = settings[key] || '#FFFFFF';
         document.documentElement.style.setProperty(cssVar, color);
+    });
+}
+
+export function applyTextFonts(settings) {
+    const textFonts = {
+        greetingFont: '--greeting-font',
+        dateFont: '--date-font'
+    };
+    Object.entries(textFonts).forEach(([key, cssVar]) => {
+        const font = settings[key] || '\'Poppins\', sans-serif';
+        document.documentElement.style.setProperty(cssVar, font);
     });
 }

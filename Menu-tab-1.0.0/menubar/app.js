@@ -13,7 +13,7 @@ import { renderNotes } from './components/notes.js';
 import { renderEditor } from './settings/editor.js';
 import { renderTrash } from './components/trash.js';
 import { initSearch, renderFavoritesInSelect } from '../utils/search.js';
-import { initSettings, loadGradients, applyGradient, applyBackgroundStyles, applyTextColors } from './settings/settings.js';
+import { initSettings, loadGradients, applyGradient, applyBackgroundStyles, applyTextColors, applyTextFonts } from './settings/settings.js';
 import { GRADIENTS } from '../utils/gradients.js';
 import { WeatherManager } from '../utils/tiempo.js';
 import { DOODLES, initDoodleSettings, updateDoodleSelectionUI } from './settings/doodles.js';
@@ -109,6 +109,9 @@ async function applySettings(settings, isUpdate = false) {
 
   // Aplicar colores de texto
   applyTextColors(settings);
+
+  // Aplicar fuentes de texto
+  applyTextFonts(settings);
 
   // Cargar y aplicar configuraciones de visibilidad de la UI
   const showSearch = settings.showSearch ?? true;

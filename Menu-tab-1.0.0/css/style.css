@@ -6,6 +6,9 @@
 --clock-color: #FFFFFF;
 --date-color: #FFFFFF;
 
+--greeting-font: 'Poppins', sans-serif;
+--date-font: 'Poppins', sans-serif;
+
 --panel-text-color: #dbe7ff;
 --panel-text-secondary-color: #dbe7ff;
 --panel-bg: #0e193a;
@@ -31,12 +34,13 @@ body.no-scroll { overflow: hidden; }
 .wrap{min-height:100vh;display:flex;flex-direction:column; background-color: rgba(0,0,0,0.4); /* Fondo semi-transparente por defecto */}
 .header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px}
 .brand{
+  font-family: var(--greeting-font);
   font-weight:600;
   font-size:18px;
   color: var(--greeting-color);
 }
 .brand-container{display:flex;align-items:center;gap:10px}
-.clock-header { font-size: 18px; font-weight: 600; opacity: 0.9; padding-left: 10px; border-left: 1px solid rgba(255,255,255,0.2); color: var(--clock-color); }
+.clock-header { font-family: var(--date-font); font-size: 18px; font-weight: 600; opacity: 0.9; padding-left: 10px; border-left: 1px solid rgba(255,255,255,0.2); color: var(--clock-color); }
 .controls{display:flex;gap:8px}
 .controls button{background:var(--button-bg);border:1px solid rgba(255,255,255,0.1);color:var(--panel-text-color);font-size:18px;padding:8px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition: all .2s ease;}
 .back-btn{font-size:24px;font-weight:bold;padding:0 10px}
@@ -113,6 +117,7 @@ body.loading .tiles-section {
     padding-bottom: 1vh;
 }
 .date{
+    font-family: var(--date-font);
     font-size: 1.2em;
     font-weight: 400;
     opacity:0.9;

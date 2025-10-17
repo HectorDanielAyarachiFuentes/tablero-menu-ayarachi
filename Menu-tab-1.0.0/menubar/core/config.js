@@ -18,7 +18,11 @@ export const STORAGE_KEYS = [
   'randomBg',
   'trash', // Re-added trash
   'autoSync',
-  'doodle'
+  'doodle',
+  'greetingColor',
+  'nameColor',
+  'clockColor',
+  'dateColor'
 ];
 
 export const API_URLS = {

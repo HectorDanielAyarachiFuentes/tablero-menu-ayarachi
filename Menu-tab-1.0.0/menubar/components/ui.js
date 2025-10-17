@@ -115,7 +115,7 @@ export async function renderGreeting(name) {
     }
 
     const namePart = name ? `, <strong>${name}</strong>` : '';
-    $('#greeting').innerHTML = `${greetingText}${namePart}`;
+    $('#header-greeting').innerHTML = `${greetingText}${namePart}`;
 }
 
 export async function updateClock() {
@@ -140,7 +140,8 @@ export async function updateClock() {
   }
   timeString += ampm;
 
-  $('#clock').textContent = timeString;
+  $('#header-clock').textContent = timeString;
+  $('#clock').textContent = timeString; // Actualiza también el reloj principal
   const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const formattedDate = new Intl.DateTimeFormat('es-ES', dateOptions).format(now);
   $('#date').textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);

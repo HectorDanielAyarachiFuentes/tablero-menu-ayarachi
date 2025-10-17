@@ -15,7 +15,10 @@
 
   try {
     // CAMBIO: Se usa chrome.storage.local explícitamente por ser más rápido.
-    const keys = ['userName', 'use12HourFormat', 'showSeconds', 'greetingPreference', 'customGreetings'];
+    const keys = [
+      'userName', 'use12HourFormat', 'showSeconds', 'greetingPreference', 'customGreetings',
+      'greetingColor', 'nameColor', 'clockColor', 'dateColor'
+    ];
     const settings = await new Promise(resolve => chrome.storage.local.get(keys, resolve));
 
     function getRandomGreeting(period, greetingsList) {
@@ -44,14 +47,22 @@
     }
 
     const namePart = settings.userName ? `, <strong>${settings.userName}</strong>` : '';
-    const greetingEl = document.getElementById('greeting');
+    const greetingEl = document.getElementById('header-greeting');
     if (greetingEl) {
       greetingEl.innerHTML = `${greetingText}${namePart}`;
     }
 
+    // --- Aplicar Colores de Texto ---
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty('--greeting-color', settings.greetingColor || '#FFFFFF');
+    rootStyle.setProperty('--name-color', settings.nameColor || '#FFFFFF');
+    rootStyle.setProperty('--clock-color', settings.clockColor || '#FFFFFF');
+    rootStyle.setProperty('--date-color', settings.dateColor || '#FFFFFF');
+
     // --- Renderizar Reloj y Fecha (con formato) ---
     const now = new Date();
-    const clockEl = document.getElementById('clock');
+    const clockEl = document.getElementById('header-clock');
+    const mainClockEl = document.getElementById('clock');
     if (clockEl) {
         let hours = now.getHours();
         const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -70,6 +81,9 @@
         }
         timeString += ampm;
         clockEl.textContent = timeString;
+        if (mainClockEl) {
+            mainClockEl.textContent = timeString;
+        }
     }
 
     const dateEl = document.getElementById('date');

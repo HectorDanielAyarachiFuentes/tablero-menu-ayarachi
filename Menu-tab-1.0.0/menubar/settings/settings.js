@@ -58,6 +58,10 @@ export function initSettings(initialState) {
         btn.addEventListener('click', () => switchToGeneralSubTab(btn.dataset.subtab));
     });
 
+    $$('#tab-paneles .sub-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchToPanelSubTab(btn.dataset.subtab));
+    });
+
     // --- Lógica para la pestaña General (nuevas opciones de reloj y saludos) ---
     populateGreetingSelect();
     storageGet(['use12HourFormat', 'showSeconds', 'greetingPreference', 'customGreetings']).then(settings => {
@@ -181,6 +185,44 @@ export function initSettings(initialState) {
         importInput.addEventListener('change', handleImport);
         document.body.appendChild(importInput);
     }
+
+    // --- Lógica para la pestaña General (Colores de Texto) ---
+    const textColors = {
+        greetingColor: { selector: '#header-greeting', cssVar: '--greeting-color' },
+        nameColor: { selector: '#header-greeting strong', cssVar: '--name-color' },
+        clockColor: { selector: '#clock', cssVar: '--clock-color' },
+        dateColor: { selector: '#date', cssVar: '--date-color' }
+    };
+
+    // Cargar colores iniciales
+    storageGet(Object.keys(textColors)).then(settings => {
+        Object.entries(textColors).forEach(([key, { cssVar }]) => {
+            const color = settings[key] || '#FFFFFF';
+            $(`#${key}`).value = color;
+            document.documentElement.style.setProperty(cssVar, color);
+        });
+    });
+
+    // Listeners para los selectores de color individuales
+    Object.entries(textColors).forEach(([key, { cssVar }]) => {
+        $(`#${key}`).addEventListener('input', (e) => {
+            const color = e.target.value;
+            document.documentElement.style.setProperty(cssVar, color);
+            saveAndSyncSetting({ [key]: color });
+        });
+    });
+
+    // Listener para el botón "Aplicar a todos"
+    $('#applyMasterTextColor').addEventListener('click', () => {
+        const masterColor = $('#masterTextColor').value;
+        const settingsToSave = {};
+        Object.entries(textColors).forEach(([key, { cssVar }]) => {
+            $(`#${key}`).value = masterColor;
+            document.documentElement.style.setProperty(cssVar, masterColor);
+            settingsToSave[key] = masterColor;
+        });
+        saveAndSyncSetting(settingsToSave);
+    });
 }
 
 /**
@@ -206,7 +248,7 @@ function switchToBackgroundSubTab(subTabId) {
  * @param {string} subTabId - El ID de la sub-pestaña a activar (ej. 'contenido', 'apariencia').
  */
 function switchToGeneralSubTab(subTabId) {
-    // Ocultar todos los paneles y desactivar todos los botones de la pestaña General
+    // Ocultar todos los paneles y desactivar todos los botones de la pestaña General.
     $$('#tab-general .sub-tab-pane').forEach(pane => {
         pane.classList.remove('active');
     });
@@ -217,6 +259,22 @@ function switchToGeneralSubTab(subTabId) {
     // Activar el panel y el botón correctos
     $(`#subtab-${subTabId}`).classList.add('active');
     $(`#tab-general .sub-tab-btn[data-subtab="${subTabId}"]`).classList.add('active');
+}
+
+/**
+ * Cambia entre las sub-pestañas de la sección "Paneles".
+ * @param {string} subTabId - El ID de la sub-pestaña a activar (ej. 'temas', 'apariencia').
+ */
+function switchToPanelSubTab(subTabId) {
+    $$('#tab-paneles .sub-tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+    });
+    $$('#tab-paneles .sub-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    $(`#tab-paneles #subtab-${subTabId}`).classList.add('active');
+    $(`#tab-paneles .sub-tab-btn[data-subtab="${subTabId}"]`).classList.add('active');
 }
 
 /**
@@ -404,4 +462,17 @@ async function handleImport(e) {
     };
     reader.readAsText(file);
     e.target.value = ''; // Reset input
+}
+
+export function applyTextColors(settings) {
+    const textColors = {
+        greetingColor: '--greeting-color',
+        nameColor: '--name-color',
+        clockColor: '--clock-color',
+        dateColor: '--date-color'
+    };
+    Object.entries(textColors).forEach(([key, cssVar]) => {
+        const color = settings[key] || '#FFFFFF';
+        document.documentElement.style.setProperty(cssVar, color);
+    });
 }

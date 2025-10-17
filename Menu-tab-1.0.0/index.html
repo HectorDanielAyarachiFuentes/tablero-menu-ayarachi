@@ -14,8 +14,8 @@
     <header class="header">
       <div class="brand-container">
         <button id="backBtn" class="back-btn" hidden aria-label="Volver a la carpeta anterior">‹</button>
-        <div id="greeting" class="brand"><span class="placeholder"></span></div>
-        <div id="clock" class="clock-header"><span class="placeholder"></span></div>
+        <div id="header-greeting" class="brand"><span class="placeholder"></span></div>
+        <div id="header-clock" class="clock-header"><span class="placeholder"></span></div>
       </div>
       <div class="controls">
         <button id="openNotes" title="Notas">
@@ -38,7 +38,7 @@
 
     <main id="main-content" class="main">
       <section class="top-content">
-        <!-- El saludo y la hora se movieron a la cabecera -->
+        <div id="clock" class="clock"><span class="placeholder"></span></div>
         <div id="date" class="date"><span class="placeholder"></span></div>
       </section>
 
@@ -161,7 +161,8 @@
       <div class="tab-pane" id="tab-general">
         <div class="sub-tabs">
           <button class="sub-tab-btn active" data-subtab="contenido">Contenido</button>
-          <button class="sub-tab-btn" data-subtab="apariencia">Apariencia</button>
+          <button class="sub-tab-btn" data-subtab="apariencia">Interfaz</button>
+          <button class="sub-tab-btn" data-subtab="colores">Colores</button>
         </div>
         <div class="sub-tab-content">
           <!-- Sub-tab: Contenido -->
@@ -188,7 +189,7 @@
             </div>
           </div>
           <!-- Sub-tab: Apariencia -->
-          <div class="sub-tab-pane" id="subtab-apariencia">
+          <div class="sub-tab-pane" id="subtab-apariencia"> <!-- CAMBIO: El nombre de la pestaña en el HTML es ahora "Interfaz" -->
             <div class="field">
               <label>Formato del Reloj</label>
             </div>
@@ -224,6 +225,41 @@
               <label for="showDateToggle">Mostrar fecha completa</label>
               <div class="switch-container">
                 <label class="switch"><input type="checkbox" id="showDateToggle"><span class="slider round"></span></label>
+              </div>
+            </div>
+          </div>
+          <!-- Sub-tab: Colores -->
+          <div class="sub-tab-pane" id="subtab-colores">
+            <div class="field">
+              <label for="masterTextColor">Color General de Texto</label>
+              <div class="color-input-group">
+                <input type="color" id="masterTextColor" value="#FFFFFF">
+                <button id="applyMasterTextColor" class="btn btn-small">Aplicar a todos</button>
+              </div>
+              <p class="field-description">Usa este control para cambiar todos los colores de texto a la vez.</p>
+            </div>
+            <div class="field">
+              <label for="greetingColor">Color del Saludo</label>
+              <div class="color-input-group">
+                <input type="color" id="greetingColor" value="#FFFFFF">
+              </div>
+            </div>
+            <div class="field">
+              <label for="nameColor">Color del Nombre</label>
+              <div class="color-input-group">
+                <input type="color" id="nameColor" value="#FFFFFF">
+              </div>
+            </div>
+            <div class="field">
+              <label for="clockColor">Color del Reloj</label>
+              <div class="color-input-group">
+                <input type="color" id="clockColor" value="#FFFFFF">
+              </div>
+            </div>
+            <div class="field">
+              <label for="dateColor">Color de la Fecha</label>
+              <div class="color-input-group">
+                <input type="color" id="dateColor" value="#FFFFFF">
               </div>
             </div>
           </div>

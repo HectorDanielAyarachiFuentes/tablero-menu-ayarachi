@@ -141,7 +141,6 @@ export async function updateClock() {
   timeString += ampm;
 
   $('#header-clock').textContent = timeString;
-  $('#clock').textContent = timeString; // Actualiza también el reloj principal
   const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const formattedDate = new Intl.DateTimeFormat('es-ES', dateOptions).format(now);
   $('#date').textContent = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);

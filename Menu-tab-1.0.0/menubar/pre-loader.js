@@ -62,7 +62,6 @@
     // --- Renderizar Reloj y Fecha (con formato) ---
     const now = new Date();
     const clockEl = document.getElementById('header-clock');
-    const mainClockEl = document.getElementById('clock');
     if (clockEl) {
         let hours = now.getHours();
         const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -81,9 +80,6 @@
         }
         timeString += ampm;
         clockEl.textContent = timeString;
-        if (mainClockEl) {
-            mainClockEl.textContent = timeString;
-        }
     }
 
     const dateEl = document.getElementById('date');

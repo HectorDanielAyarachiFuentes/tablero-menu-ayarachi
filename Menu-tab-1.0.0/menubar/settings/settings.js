@@ -190,7 +190,7 @@ export function initSettings(initialState) {
     const textColors = {
         greetingColor: { selector: '#header-greeting', cssVar: '--greeting-color' },
         nameColor: { selector: '#header-greeting strong', cssVar: '--name-color' },
-        clockColor: { selector: '#clock', cssVar: '--clock-color' },
+        clockColor: { selector: '#header-clock', cssVar: '--clock-color' },
         dateColor: { selector: '#date', cssVar: '--date-color' }
     };
 

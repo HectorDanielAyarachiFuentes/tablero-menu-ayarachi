@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Tablero - Nueva pestaña</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Raleway:wght@400;700&family=Playfair+Display:wght@400;700&family=Merriweather:wght@400;700&family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="loading">
@@ -234,14 +234,32 @@
               <label for="greetingFont">Fuente del Saludo y Reloj</label>
               <select id="greetingFont">
                 <option value="'Poppins', sans-serif">Poppins (Defecto)</option>
-                <option value="'Roboto', sans-serif">Roboto</option>
-                <option value="'Open Sans', sans-serif">Open Sans</option>
+                <optgroup label="Sans Serif">
+                  <option value="'Roboto', sans-serif">Roboto</option>
+                  <option value="'Open Sans', sans-serif">Open Sans</option>
+                  <option value="'Lato', sans-serif">Lato</option>
+                  <option value="'Montserrat', sans-serif">Montserrat</option>
+                  <option value="'Oswald', sans-serif">Oswald</option>
+                  <option value="'Raleway', sans-serif">Raleway</option>
+                </optgroup>
+                <optgroup label="Serif">
+                  <option value="'Playfair Display', serif">Playfair Display</option>
+                  <option value="'Merriweather', serif">Merriweather</option>
+                </optgroup>
+                <optgroup label="Monospace">
+                  <option value="'Source Code Pro', monospace">Source Code Pro</option>
+                </optgroup>
               </select>
             </div>
             <div class="field">
               <label for="dateFont">Fuente de la Fecha</label>
               <select id="dateFont">
                 <option value="'Poppins', sans-serif">Poppins (Defecto)</option>
+                <option value="'Roboto', sans-serif">Roboto</option>
+                <option value="'Open Sans', sans-serif">Open Sans</option>
+                <option value="'Lato', sans-serif">Lato</option>
+                <option value="'Montserrat', sans-serif">Montserrat</option>
+                <option value="'Playfair Display', serif">Playfair Display</option>
               </select>
             </div>
           </div>
